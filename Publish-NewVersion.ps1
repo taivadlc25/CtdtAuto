@@ -52,6 +52,7 @@ $exePath = Join-Path $root 'CtdtAuto.exe'
 $argsText = "/in `"$au3Path`" /out `"$exePath`" /icon `"$iconPath`" /x64 /comp 1 /gui"
 $compiler = Start-Process -FilePath (Join-Path $autoit 'Aut2Exe\Aut2exe_x64.exe') -ArgumentList $argsText -Wait -PassThru -NoNewWindow
 if ($compiler.ExitCode -ne 0 -or !(Test-Path $exePath)) { throw 'Bien dich CtdtAuto.exe that bai.' }
+Copy-Item $exePath (Join-Path $root 'CTDT_auto_custom.exe') -Force -ErrorAction SilentlyContinue
 Write-Host "[3/5] Da bien dich CtdtAuto.exe thanh cong." -ForegroundColor Green
 
 # 4. Cap nhat version.json

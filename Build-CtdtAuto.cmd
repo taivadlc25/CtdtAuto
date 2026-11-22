@@ -10,6 +10,7 @@ if errorlevel 1 (
     pause
     exit /b 1
 )
+copy /y "%~dp0CtdtAuto.exe" "%~dp0CTDT_auto_custom.exe" >nul
 echo.
 echo ==============================================
 echo  Bien dich CtdtAuto.exe cuc bo thanh cong!
