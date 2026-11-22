@@ -1,0 +1,14 @@
+# Auto-generated logs & user credentials
+auto_log.txt*
+auto_done.ini
+auto_assign.ini
+custom_clicks.ini
+auto_modes.ini
+*.bak*
+*.old
+*.tmp
+.ctdt-update/
+backup/
+releases/
+*.exe
+!updater/CTDT.Update.exe
