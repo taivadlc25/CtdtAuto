@@ -4,8 +4,8 @@
 #AutoIt3Wrapper_Compile_Both=y
 #AutoIt3Wrapper_UseX64=y
 #pragma compile(Icon, CtdtAuto.ico)
-#pragma compile(FileVersion, 2026.11.22.1)
-#pragma compile(ProductVersion, 2026.11.22.1)
+#pragma compile(FileVersion, 2026.11.22.3)
+#pragma compile(ProductVersion, 2026.11.22.3)
 #EndRegion
 Global Const $BS_GROUPBOX = 7
 Global Const $BS_BOTTOM = 2048
@@ -18627,7 +18627,9 @@ Global Const $UI_BG = 0xFFFFFF, $UI_INK = 0x192D3A, $UI_MUTED = 0x4C6470
 Global Const $UI_NAVY = 0x173341, $UI_TEAL = 0x006C62, $UI_RAIL = 0xF1F6F6
 Global Const $UI_LINE = 0xD6E2E4, $UI_BUTTON_BG = 0xE8F0F1
 Global Const $UI_MAIN_W = 842, $UI_MAIN_H = 498, $UI_COMPACT_W = 634, $UI_COMPACT_H = 68
-Global Const $UPDATE_VERSION = "2026.11.22.1", $UPDATE_FEED_ID = "", $UPDATE_FOLDER_ID = "1FWAshoHwxR2NqkBdrQBvFqKYH6W2wC7k"
+Global Const $UPDATE_VERSION = "2026.11.22.3"
+Global Const $GITHUB_VERSION_URL = "https://raw.githubusercontent.com/taivadlc25/CtdtAuto/main/version.json"
+Global Const $GITHUB_REPO_URL = "https://github.com/taivadlc25/CtdtAuto"
 Global $updateForm = 0, $updateStatusLabel = 0, $updateRendered = "", $updateError = "", $updateManualStart = 0
 Global $SAMINI = @ScriptDir & "\auto_modes.ini", $AMMAINIDS[1] = [0], $AMCURMODE = 0, $HAMFORM = 0
 
@@ -18975,7 +18977,7 @@ Global $AMIP1 , $AMIP2 , $AMIP3 , $AMCACT , $AMICLICK , $AMIDELAY , $AMINOTE , $
 CUSTOM_RELOAD ( )
 GET_GAME_WINDOW ( )
 AdlibRegister("UI_TRACK_WINDOW", 150)
-If UPDATE_SUPPORTED() Then
+If @Compiled Then
     AdlibRegister("UPDATE_AUTO_CHECK", 21600000)
     UPDATE_AUTO_CHECK()
 EndIf
@@ -19926,8 +19928,81 @@ Func OPENGOOGLEDRIVELINKHD ( )
 	Local $SGOOGLEDRIVEURLHD = "https://docs.google.com/document/d/1FE21wYpfcDL7BimvPrsuZFuMw3IHyd5Z/edit?usp=sharing&ouid=101413745667992729268&rtpof=true&sd=true"
 	ShellExecute ( $SGOOGLEDRIVEURLHD )
 EndFunc
-Func UPDATE_SUPPORTED()
-    Return @Compiled And (@ScriptName = "CtdtAuto.exe" Or @ScriptName = "CTDT_auto_custom.exe")
+Func IS_NEWER_VERSION($sRemote, $sLocal)
+    Local $aR = StringSplit($sRemote, ".", 2)
+    Local $aL = StringSplit($sLocal, ".", 2)
+    Local $iMax = UBound($aR) > UBound($aL) ? UBound($aR) : UBound($aL)
+    For $i = 0 To $iMax - 1
+        Local $nR = $i < UBound($aR) ? Number($aR[$i]) : 0
+        Local $nL = $i < UBound($aL) ? Number($aL[$i]) : 0
+        If $nR > $nL Then Return True
+        If $nR < $nL Then Return False
+    Next
+    Return False
+EndFunc
+
+Func UPDATE_CHECK_GITHUB($bSilent = True)
+    If Not @Compiled Then Return False
+    Local $d = InetRead($GITHUB_VERSION_URL, 1)
+    If @error Or BinaryLen($d) = 0 Then
+        If Not $bSilent Then MsgBox(48, "Cập nhật", "Không thể kết nối đến máy chủ GitHub để kiểm tra phiên bản." & @CRLF & "Vui lòng kiểm tra lại kết nối mạng.", 0, $MAINFORM)
+        Return False
+    EndIf
+    Local $json = BinaryToString($d, 4)
+    Local $mVer = StringRegExp($json, '"version"\s*:\s*"([^"]+)"', 1)
+    If Not IsArray($mVer) Then
+        If Not $bSilent Then MsgBox(48, "Cập nhật", "Dữ liệu phiên bản trên GitHub không hợp lệ.", 0, $MAINFORM)
+        Return False
+    EndIf
+    Local $sRemoteVer = $mVer[0]
+    Local $mUrl = StringRegExp($json, '"download_url"\s*:\s*"([^"]+)"', 1)
+    Local $sDownloadUrl = IsArray($mUrl) ? $mUrl[0] : ""
+    Local $mLog = StringRegExp($json, '"changelog"\s*:\s*"([^"]+)"', 1)
+    Local $sLog = IsArray($mLog) ? $mLog[0] : "Bản cập nhật mới."
+
+    If Not IS_NEWER_VERSION($sRemoteVer, $UPDATE_VERSION) Then
+        If Not $bSilent Then MsgBox(64, "Cập nhật", "Bạn đang sử dụng phiên bản mới nhất (v" & $UPDATE_VERSION & ").", 0, $MAINFORM)
+        Return False
+    EndIf
+
+    Local $msg = "Đã có phiên bản mới: v" & $sRemoteVer & " (bản hiện tại: v" & $UPDATE_VERSION & ")" & @CRLF & @CRLF & _
+                 "Nội dung cập nhật:" & @CRLF & $sLog & @CRLF & @CRLF & _
+                 "Ứng dụng sẽ tự động tải và khởi động lại bản mới trong 10 giây." & @CRLF & _
+                 "Nhấn [Yes] để cập nhật ngay, [No] để bỏ qua."
+
+    Local $ans = MsgBox(BitOR(4, 64, 262144), "Cập nhật CtdtAuto", $msg, 10, $MAINFORM)
+    If $ans = 7 Then Return False
+
+    _GUICTRLSTATUSBAR_SETTEXT($SSTATUS, "Đang tải bản cập nhật v" & $sRemoteVer & "…", 0, 0)
+    Local $updateDir = @ScriptDir & "\.ctdt-update"
+    If Not FileExists($updateDir) Then DirCreate($updateDir)
+    Local $newExe = $updateDir & "\CtdtAuto_new.exe"
+    If FileExists($newExe) Then FileDelete($newExe)
+
+    Local $hDownload = InetGet($sDownloadUrl, $newExe, 1, 0)
+    If @error Or Not FileExists($newExe) Or FileGetSize($newExe) < 500000 Then
+        _GUICTRLSTATUSBAR_SETTEXT($SSTATUS, "Tải bản cập nhật thất bại.", 0, 0)
+        MsgBox(48, "Lỗi cập nhật", "Không thể tải file CtdtAuto.exe từ GitHub Releases." & @CRLF & "Hãy thử lại hoặc mở trang GitHub Releases để tải thủ công.", 0, $MAINFORM)
+        Return False
+    EndIf
+
+    Local $cmdFile = $updateDir & "\apply_update.cmd"
+    Local $hF = FileOpen($cmdFile, BitOR(2, 512))
+    FileWriteLine($hF, "@echo off")
+    FileWriteLine($hF, "chcp 65001 >nul")
+    FileWriteLine($hF, "timeout /t 1 /nobreak >nul")
+    FileWriteLine($hF, ":wait_lock")
+    FileWriteLine($hF, 'move /y "%~dp0CtdtAuto_new.exe" "' & @ScriptFullPath & '" >nul 2>&1')
+    FileWriteLine($hF, "if errorlevel 1 (")
+    FileWriteLine($hF, "    timeout /t 1 /nobreak >nul")
+    FileWriteLine($hF, "    goto wait_lock")
+    FileWriteLine($hF, ")")
+    FileWriteLine($hF, 'start "" "' & @ScriptFullPath & '"')
+    FileWriteLine($hF, "exit")
+    FileClose($hF)
+
+    Run('cmd.exe /c "' & $cmdFile & '"', @ScriptDir, @SW_HIDE)
+    Exit
 EndFunc
 
 Func UPDATE_OPEN()
@@ -19935,138 +20010,38 @@ Func UPDATE_OPEN()
         WinActivate($updateForm)
         Return
     EndIf
-    $updateForm = GUICreate("Cập nhật CTDT Auto", 502, 242, -1, -1, -1, -1, $MAINFORM)
+    $updateForm = GUICreate("Cập nhật CtdtAuto", 502, 242, -1, -1, -1, -1, $MAINFORM)
     GUISetFont(9, 400, 0, "Segoe UI", $updateForm)
     GUISetBkColor($UI_BG, $updateForm)
     GUISetOnEvent($GUI_EVENT_CLOSE, "UPDATE_CLOSE", $updateForm)
-    UI_HEADER("Cập nhật CTDT Auto", "Phiên bản đang dùng  ·  " & $UPDATE_VERSION, 502)
+    UI_HEADER("Cập nhật CtdtAuto", "Phiên bản đang dùng  ·  v" & $UPDATE_VERSION, 502)
     UI_TITLE("Trạng thái", 22, 84, 460)
-    $updateStatusLabel = GUICtrlCreateLabel("", 22, 113, 458, 46, $SS_NOPREFIX)
+    $updateStatusLabel = GUICtrlCreateLabel("Hệ thống tự động kiểm tra phiên bản mới trên GitHub khi khởi động.", 22, 113, 458, 46, $SS_NOPREFIX)
     GUICtrlSetColor($updateStatusLabel, $UI_INK)
-    GUICtrlCreateLabel("Bản cập nhật sẽ được cài sau khi bạn đóng tất cả cửa sổ CTDT Auto.", 22, 163, 458, 22)
+    GUICtrlCreateLabel("Máy chủ phát hành: https://github.com/taivadlc25/CtdtAuto", 22, 163, 458, 22)
     GUICtrlSetColor(-1, $UI_MUTED)
-    Local $checkButton = UI_BUTTON("Kiểm tra ngay", 22, 195, 128, 32, "UPDATE_MANUAL_CHECK", True)
-    If Not UPDATE_SUPPORTED() Then GUICtrlSetState($checkButton, $GUI_DISABLE)
-    UI_BUTTON("Mở Google Drive", 160, 195, 144, 32, "UPDATE_OPEN_DRIVE")
-    UI_BUTTON("Nguồn", 314, 195, 77, 32, "UPDATE_SET_FEED")
+    UI_BUTTON("Kiểm tra ngay", 22, 195, 128, 32, "UPDATE_MANUAL_CHECK", True)
+    UI_BUTTON("Mở GitHub Releases", 160, 195, 160, 32, "UPDATE_OPEN_GITHUB")
     UI_BUTTON("Đóng", 401, 195, 79, 32, "UPDATE_CLOSE")
-    $updateRendered = ""
-    UPDATE_REFRESH()
-    AdlibRegister("UPDATE_REFRESH", 1000)
     GUISetState(@SW_SHOW, $updateForm)
 EndFunc
 
 Func UPDATE_CLOSE()
-    AdlibUnRegister("UPDATE_REFRESH")
     If $updateForm Then GUIDelete($updateForm)
     $updateForm = 0
     $updateStatusLabel = 0
 EndFunc
 
-Func UPDATE_OPEN_DRIVE()
-    ShellExecute("https://drive.google.com/drive/folders/" & $UPDATE_FOLDER_ID)
-EndFunc
-
-Func UPDATE_FEED()
-    Local $id = IniRead(@ScriptDir & "\ctdt_update.ini", "GoogleDrive", "ManifestId", $UPDATE_FEED_ID)
-    If StringRegExp($id, "^[A-Za-z0-9_-]{10,200}$") Then Return $id
-    Return ""
-EndFunc
-
-Func UPDATE_SET_FEED()
-    Local $value = InputBox("Nguồn cập nhật", "Dán liên kết chia sẻ hoặc ID tệp latest.txt trên Google Drive.", UPDATE_FEED(), "", 482, 162, Default, Default, 0, $updateForm)
-    If @error Then Return
-    $value = StringStripWS($value, 3)
-    Local $match = StringRegExp($value, "(?i)^https://drive\.google\.com/file/d/([A-Za-z0-9_-]{10,200})(?:[/?#]|$)", 1)
-    If IsArray($match) Then $value = $match[0]
-    If $value <> "" And Not StringRegExp($value, "^[A-Za-z0-9_-]{10,200}$") Then
-        MsgBox(48, "Nguồn cập nhật", "Hãy sao chép liên kết chia sẻ của tệp latest.txt.", 0, $updateForm)
-        Return
-    EndIf
-    If Not IniWrite(@ScriptDir & "\ctdt_update.ini", "GoogleDrive", "ManifestId", $value) Then
-        MsgBox(48, "Nguồn cập nhật", "Không ghi được thiết lập vào thư mục ứng dụng.", 0, $updateForm)
-        Return
-    EndIf
-    $updateManualStart = 0
-    UPDATE_MANUAL_CHECK()
-EndFunc
-
-Func UPDATE_REFRESH()
-    If Not $updateForm Or Not $updateStatusLabel Then Return
-    Local $message = $updateError
-    If Not UPDATE_SUPPORTED() Then
-        $message = "Hãy mở CtdtAuto.exe để kiểm tra và cài bản cập nhật."
-    ElseIf UPDATE_FEED() = "" Then
-        $message = "Chưa có nguồn phát hành. Chọn Nguồn để nhập liên kết tệp latest.txt."
-    ElseIf $message = "" Then
-        If $updateManualStart And TimerDiff($updateManualStart) < 1500 Then
-            $message = "Đang kiểm tra bản cập nhật…"
-        Else
-            Local $file = FileOpen(@ScriptDir & "\.ctdt-update\status.txt", $FO_UTF8)
-            If $file <> -1 Then
-                $message = StringStripWS(FileReadLine($file), 3)
-                FileClose($file)
-            EndIf
-            If $message = "" Then $message = "Đang chờ kết quả kiểm tra."
-        EndIf
-    EndIf
-    If $message <> $updateRendered Then
-        GUICtrlSetData($updateStatusLabel, $message)
-        $updateRendered = $message
-    EndIf
+Func UPDATE_OPEN_GITHUB()
+    ShellExecute($GITHUB_REPO_URL & "/releases")
 EndFunc
 
 Func UPDATE_MANUAL_CHECK()
-    If $updateManualStart And TimerDiff($updateManualStart) < 1500 Then Return
-    $updateManualStart = TimerInit()
-    UPDATE_LAUNCH("manual")
-    UPDATE_REFRESH()
+    UPDATE_CHECK_GITHUB(False)
 EndFunc
 
 Func UPDATE_AUTO_CHECK()
-    UPDATE_LAUNCH("auto")
-EndFunc
-
-Func UPDATE_LAUNCH($mode)
-    If Not UPDATE_SUPPORTED() Then Return
-    $updateError = ""
-    Local $feed = UPDATE_FEED()
-    If $feed = "" And Not FileExists(@ScriptDir & "\.ctdt-update\pending\manifest.txt") Then Return
-    Local $worker = UPDATE_WORKER_PATH()
-    If $worker = "" Then
-        $updateError = "Không thể chuẩn bị trình cập nhật. Hãy kiểm tra quyền ghi vào thư mục dữ liệu người dùng rồi thử lại."
-        Return
-    EndIf
-    Local $command = '"' & $worker & '" "' & @ScriptFullPath & '" "' & $UPDATE_VERSION & '" "' & $feed & '" ' & $mode
-    If Not Run($command, @ScriptDir, @SW_HIDE) Then $updateError = "Không thể mở trình cập nhật. Hãy thử lại hoặc mở Google Drive."
-EndFunc
-
-Func UPDATE_WORKER_PATH()
-    Local $installKey = _WinAPI_HashString(@ScriptFullPath, False, 16)
-    If @error Then Return ""
-    Local $cache = @LocalAppDataDir & "\CTDT Auto\Updater\" & StringTrimLeft(String($installKey), 2) & "\" & $UPDATE_VERSION
-    If Not DirCreate($cache) Then Return ""
-    Local $worker = $cache & "\CTDT.Update.exe", $incoming = $cache & "\extract-" & @AutoItPID & ".tmp"
-    If Not FileInstall("updater\CTDT.Update.exe", $incoming, $FC_OVERWRITE) Then Return ""
-    ; Publishing a completed file avoids starting a partially extracted worker.
-    If FileMove($incoming, $worker, $FC_NOOVERWRITE) Then Return $worker
-    Local $same = False, $size = FileGetSize($incoming)
-    If $size > 0 And FileGetSize($worker) = $size Then
-        Local $expected = FileOpen($incoming, $FO_BINARY), $existing = FileOpen($worker, $FO_BINARY)
-        If $expected <> -1 And $existing <> -1 Then
-            Local $embeddedBytes = FileRead($expected), $cachedBytes = FileRead($existing)
-            $same = (BinaryLen($embeddedBytes) = $size And BinaryLen($cachedBytes) = $size And $embeddedBytes == $cachedBytes)
-        EndIf
-        If $expected <> -1 Then FileClose($expected)
-        If $existing <> -1 Then FileClose($existing)
-    EndIf
-    If $same Then
-        FileDelete($incoming)
-        Return $worker
-    EndIf
-    If FileMove($incoming, $worker, $FC_OVERWRITE) Then Return $worker
-    FileDelete($incoming)
-    Return ""
+    UPDATE_CHECK_GITHUB(True)
 EndFunc
 Func AUTOCUPCHAMPIONSHIP ( )
 	GOTOHOME ( )
