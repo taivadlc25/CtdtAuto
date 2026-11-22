@@ -18622,123 +18622,155 @@ Opt ( "MouseCoordMode" , 0 )
 Opt ( "PixelCoordMode" , 0 )
 Opt ( "GUIOnEventMode" , 1 )
 OnAutoItExitRegister ( "bExitClick" )
-#Region CTDT desktop interface
-Global Const $UI_BG = 0xFFFFFF, $UI_INK = 0x192D3A, $UI_MUTED = 0x4C6470
-Global Const $UI_NAVY = 0x173341, $UI_TEAL = 0x006C62, $UI_RAIL = 0xF1F6F6
-Global Const $UI_LINE = 0xD6E2E4, $UI_BUTTON_BG = 0xE8F0F1
-Global Const $UI_MAIN_W = 842, $UI_MAIN_H = 498, $UI_COMPACT_W = 634, $UI_COMPACT_H = 68
+#Region ### START Koda GUI section ### Form=
 Global Const $UPDATE_VERSION = "2026.11.22.3"
 Global Const $GITHUB_VERSION_URL = "https://raw.githubusercontent.com/taivadlc25/CtdtAuto/main/version.json"
 Global Const $GITHUB_REPO_URL = "https://github.com/taivadlc25/CtdtAuto"
-Global $updateForm = 0, $updateStatusLabel = 0, $updateRendered = "", $updateError = "", $updateManualStart = 0
-Global $SAMINI = @ScriptDir & "\auto_modes.ini", $AMMAINIDS[1] = [0], $AMCURMODE = 0, $HAMFORM = 0
-
-$MAINFORM = GUICreate("CTDT Auto", $UI_MAIN_W, $UI_MAIN_H)
-GUISetFont(10, 400, 0, "Segoe UI")
-GUISetBkColor($UI_BG)
-GUISetOnEvent($GUI_EVENT_CLOSE, "MainFormClose")
-GUISetOnEvent($GUI_EVENT_MINIMIZE, "MainFormMinimize")
-GUISetOnEvent($GUI_EVENT_MAXIMIZE, "MainFormMaximize")
-GUISetOnEvent($GUI_EVENT_RESTORE, "MainFormRestore")
-Local $oldResizeMode = Opt("GUIResizeMode", $GUI_DOCKALL)
-
-; This legacy mode selector is internal and must stay hidden after expansion.
-GUIStartGroup()
-$EVENEX1 = GUICtrlCreateRadio("", -100, -100, 1, 1)
-GUICtrlSetState($EVENEX1, BitOR($GUI_CHECKED, $GUI_HIDE))
-GUICtrlSetOnEvent($EVENEX1, "ex1")
-GUIStartGroup()
-
-; All expanded-only controls are created consecutively between these two IDs.
-Global $uiFirstSetting = UI_BLOCK(0, 68, 208, 352, $UI_RAIL)
-Global $uiModeCaption = UI_HEADER("CTDT Auto", "", $UI_MAIN_W, 530)
-UI_HEADER_LINK("Hướng dẫn", 624, 98, "OpenGoogleDriveLinkhd")
-UI_HEADER_LINK("Cập nhật", 732, 90, "UPDATE_OPEN")
-
-UI_TITLE("Chế độ chạy", 18, 84, 170, $UI_RAIL)
-$LAMMODE = GUICtrlCreateList("", 18, 116, 172, 197, BitOR(0x0001, 0x0100, $WS_HSCROLL, $WS_VSCROLL, $WS_BORDER))
-GUICtrlSetFont($LAMMODE, 10, 400, 0, "Segoe UI")
-GUICtrlSetOnEvent($LAMMODE, "AM_MAINSELCLICK")
-$BAMEDIT = UI_BUTTON("Chỉnh chế độ", 18, 329, 172, 32, "AMED_OPEN")
-$BAMQUEUE = UI_BUTTON("Hàng đợi", 18, 370, 172, 32, "AMQ_OPEN")
-
-UI_BLOCK(208, 68, 1, 352, $UI_LINE)
-UI_BLOCK(534, 86, 1, 316, $UI_LINE)
-UI_TITLE("Thi đấu", 232, 84, 280)
-UI_CAPTION("Sự kiện", 232, 120, 68)
-$LOAIEVEN = GUICtrlCreateCombo("", 308, 116, 203, 26, $CBS_DROPDOWNLIST)
-GUICtrlSetData($LOAIEVEN, "Kịch bản 1|Kịch bản 2|Kịch bản 3|Kịch bản 4|Tùy chỉnh", "Tùy chỉnh")
-GUICtrlSetOnEvent($LOAIEVEN, "loaieven")
-
-UI_CAPTION("Cách tham gia", 232, 157, 260)
-GUIStartGroup()
-$CAYEVEN1 = UI_RADIO("Nhận bóng", 232, 180, 140, "cayeven1")
-$CAYEVEN2 = UI_RADIO("Chơi solo", 381, 180, 141, "cayeven2", True)
-$CAYEVEN3 = UI_RADIO("Vào phòng Global", 232, 205, 140, "cayeven3")
-$CAYEVEN4 = UI_RADIO("Vào phòng Club", 381, 205, 141, "cayeven4")
-$CAYEVEN5 = UI_RADIO("Tạo phòng Club", 381, 230, 141, "cayeven5")
-$CAYEVEN6 = UI_RADIO("Tạo phòng Global", 232, 230, 140, "cayeven6")
-
-UI_BLOCK(232, 265, 279, 1, $UI_LINE)
-UI_CAPTION("Số người khi tạo phòng", 232, 280, 276)
-GUIStartGroup()
-$NHANHOST1 = UI_RADIO("1", 232, 307, 49, "nguoi1")
-$NHANHOST2 = UI_RADIO("2", 287, 307, 49, "nguoi2")
-$NHANHOST3 = UI_RADIO("3", 342, 307, 49, "nguoi3")
-$NHANHOST4 = UI_RADIO("Tự động", 397, 307, 114, "nguoi4", True)
-GUIStartGroup()
-
-UI_CAPTION("Tùy chọn màn chơi", 232, 350, 279)
-$RNEXT = UI_CHECK("Next Dream", 232, 377, 140, "rNextClick")
-$RHIDDEN = UI_CHECK("Hidden", 381, 377, 130, "rHiddenClick")
-
-UI_TITLE("Huấn luyện cầu thủ", 557, 84, 267)
-$CHKTRAINSSR = UI_CHECK("SSR", 557, 115, 111, "OnSSRClick", True)
-$CHKTRAINUR = UI_CHECK("UR", 557, 139, 111)
-$CHKUNHEART = UI_CHECK("Gỡ tim", 557, 163, 111, "OnUnheartClick")
-$CHKEX = UI_CHECK("Huấn luyện EX", 683, 115, 143, "", True)
-$CHKEVO = UI_CHECK("Tiến hóa +4", 683, 139, 143, "", True)
-$CHKENHANCE = UI_CHECK("Nâng kỹ năng", 683, 163, 143, "", True)
-UI_CAPTION("Bán thẻ", 557, 203, 59)
-$CSALLN = UI_CHECK("N", 626, 201, 48, "rYesClick", True)
-$CSALLR = UI_CHECK("R", 680, 201, 48, "rNoClick", True)
-$CSALLSR = UI_CHECK("SR", 739, 201, 68)
-
-UI_BLOCK(557, 239, 263, 1, $UI_LINE)
-UI_TITLE("Tài nguyên", 557, 251, 265)
-$KHONGMUA = UI_CHECK("Energy Ball", 557, 283, 92, "khongmua")
-$RSKIPTICKET = UI_CHECK("Vé Skip", 653, 283, 75, "rSkipticketClick")
-$RADS = UI_CHECK("Quảng cáo", 735, 283, 90, "rAdsClick", True)
-UI_BLOCK(557, 319, 263, 1, $UI_LINE)
-UI_TITLE("Giám sát", 557, 331, 265)
-$CHECK1 = UI_CHECK("Phát hiện treo sau", 557, 358, 137, "check1", True)
-$IMAXFTIME = GUICtrlCreateInput("150", 698, 355, 52, 25, BitOR($ES_NUMBER, $ES_AUTOHSCROLL))
-UI_CAPTION("giây", 758, 359, 60)
-$RRESTART = UI_CHECK("Tiếp tục trận", 557, 386, 250, "rRestartClick", True)
-Global $uiLastSetting = UI_BLOCK(0, 420, $UI_MAIN_W, 1, $UI_LINE)
-
-; The same six actions stay available when the console is docked in compact view.
-Global $BSTART = UI_BUTTON("Bắt đầu", 0, 0, 1, 1, "bStartClick", True)
-Global $BASSIGN = UI_BUTTON("Gán cửa sổ", 0, 0, 1, 1, "bAssignClick")
-Global $BRESIZE = UI_BUTTON("Chỉnh kích thước", 0, 0, 1, 1, "bResizeClick")
-Global $BCUSTOMBTN = UI_BUTTON("Click tùy chỉnh", 0, 0, 1, 1, "BCUSTOMCLICKOPEN")
-Global $BTOGGLE = UI_BUTTON("Thu gọn", 0, 0, 1, 1, "BTOGGLECLICK")
-Global $BEXIT = UI_BUTTON("Thoát", 0, 0, 1, 1, "bExitClick")
-UI_TOOLBAR(False)
-Opt("GUIResizeMode", $oldResizeMode)
-
-$SSTATUS = _GUICtrlStatusBar_Create($MAINFORM)
-_GUICtrlStatusBar_SetMinHeight($SSTATUS, 24)
-Local $aParts[2] = [$UI_MAIN_W - 165, -1]
-_GUICtrlStatusBar_SetParts($SSTATUS, $aParts)
-_GUICtrlStatusBar_SetText($SSTATUS, "Chưa gán cửa sổ giả lập", 0)
-_GUICtrlStatusBar_SetText($SSTATUS, "Chờ kết nối", 1)
-_GUICtrlStatusBar_Resize($SSTATUS)
-AM_ENSUREINI()
-AM_FILLMAINLIST(0)
-GUICtrlSetState($LAMMODE, $GUI_FOCUS)
-GUISetState(@SW_SHOW, $MAINFORM)
-#EndRegion
+$MAINFORM = GUICreate ( "CTDT Auto" , 583 , 296 , - 2 , 0 )
+GUISetOnEvent ( $GUI_EVENT_CLOSE , "MainFormClose" )
+GUISetOnEvent ( $GUI_EVENT_MINIMIZE , "MainFormMinimize" )
+GUISetOnEvent ( $GUI_EVENT_MAXIMIZE , "MainFormMaximize" )
+GUISetOnEvent ( $GUI_EVENT_RESTORE , "MainFormRestore" )
+$GAUTOSELL = GUICtrlCreateGroup ( "Sell All" , 248 , 160 , 57 , 73 )
+$CSALLN = GUICtrlCreateCheckbox ( "N" , 256 , 176 , 25 , 17 )
+GUICtrlSetState ( - 1 , $GUI_CHECKED )
+GUICtrlSetOnEvent ( - 1 , "rYesClick" )
+$CSALLR = GUICtrlCreateCheckbox ( "R" , 256 , 192 , 25 , 17 )
+GUICtrlSetState ( - 1 , $GUI_CHECKED )
+GUICtrlSetOnEvent ( - 1 , "rNoClick" )
+$CSALLSR = GUICtrlCreateCheckbox ( "SR" , 256 , 208 , 32 , 17 )
+$EVENEX1 = GUICtrlCreateRadio ( "1" , - 100 , - 100 , 10 , 10 )
+GUICtrlSetState ( - 1 , BitOR ( $GUI_CHECKED , $GUI_HIDE ) )
+GUICtrlSetOnEvent ( - 1 , "ex1" )
+$EVEN = GUICtrlCreateGroup ( "Training Config" , 152 , 0 , 153 , 73 )
+$CHKTRAINSSR = GUICtrlCreateCheckbox ( "SSR" , 160 , 15 , 45 , 17 )
+GUICtrlSetState ( - 1 , $GUI_CHECKED )
+GUICtrlSetOnEvent ( $CHKTRAINSSR , "OnSSRClick" )
+$CHKTRAINUR = GUICtrlCreateCheckbox ( "UR" , 160 , 33 , 45 , 17 )
+$CHKUNHEART = GUICtrlCreateCheckbox ( "Gỡ ♥" , 160 , 51 , 48 , 17 )
+GUICtrlSetOnEvent ( $CHKUNHEART , "OnUnheartClick" )
+$CHKEX = GUICtrlCreateCheckbox ( "EX Training" , 214 , 15 , 87 , 17 )
+GUICtrlSetState ( - 1 , $GUI_CHECKED )
+$CHKEVO = GUICtrlCreateCheckbox ( "Evolution +4" , 214 , 33 , 87 , 17 )
+GUICtrlSetState ( - 1 , $GUI_CHECKED )
+$CHKENHANCE = GUICtrlCreateCheckbox ( "Enhance Skills" , 214 , 51 , 87 , 17 )
+GUICtrlSetState ( - 1 , $GUI_CHECKED )
+GUICtrlCreateGroup ( "" , - 1 , - 1 , 1 , 1 )
+$NHANHOST = GUICtrlCreateGroup ( "Host" , 248 , 72 , 57 , 89 )
+$NHANHOST1 = GUICtrlCreateRadio ( "1 P" , 256 , 88 , 35 , 17 )
+GUICtrlSetOnEvent ( - 1 , "nguoi1" )
+$NHANHOST2 = GUICtrlCreateRadio ( "2 P" , 256 , 104 , 35 , 17 )
+GUICtrlSetOnEvent ( - 1 , "nguoi2" )
+$NHANHOST3 = GUICtrlCreateRadio ( "3 P" , 256 , 120 , 35 , 17 )
+GUICtrlSetOnEvent ( - 1 , "nguoi3" )
+$NHANHOST4 = GUICtrlCreateRadio ( "Auto" , 256 , 136 , 40 , 17 )
+GUICtrlSetOnEvent ( - 1 , "nguoi4" )
+GUICtrlSetState ( - 1 , $GUI_CHECKED )
+$CAYEVEN = GUICtrlCreateGroup ( "Farming Mode" , 152 , 104 , 89 , 129 )
+$CAYEVEN1 = GUICtrlCreateRadio ( "Take Ball" , 160 , 120 , 65 , 17 )
+GUICtrlSetOnEvent ( - 1 , "cayeven1" )
+$CAYEVEN2 = GUICtrlCreateRadio ( "Solo" , 160 , 138 , 57 , 17 )
+GUICtrlSetOnEvent ( - 1 , "cayeven2" )
+GUICtrlSetState ( - 1 , $GUI_CHECKED )
+$CAYEVEN3 = GUICtrlCreateRadio ( "Join Global" , 160 , 155 , 73 , 17 )
+GUICtrlSetOnEvent ( - 1 , "cayeven3" )
+$CAYEVEN4 = GUICtrlCreateRadio ( "Join Club" , 160 , 173 , 73 , 17 )
+GUICtrlSetOnEvent ( - 1 , "cayeven4" )
+$CAYEVEN5 = GUICtrlCreateRadio ( "Host Club" , 160 , 190 , 73 , 17 )
+GUICtrlSetOnEvent ( - 1 , "cayeven5" )
+$CAYEVEN6 = GUICtrlCreateRadio ( "Host Global" , 160 , 208 , 73 , 17 )
+GUICtrlSetOnEvent ( - 1 , "cayeven6" )
+$LOAIEVEN = GUICtrlCreateCombo ( "Even mode 1" , 152 , 80 , 89 , 25 , 3 )
+GUICtrlSetData ( $LOAIEVEN , "Even mode 2|Even mode 3|Even mode 4|Custom" , "Custom" )
+GUICtrlSetOnEvent ( - 1 , "loaieven" )
+$MUABALL = GUICtrlCreateGroup ( "E.ball/Ads/Skip Tic?" , 8 , 176 , 137 , 57 )
+$KHONGMUA = GUICtrlCreateCheckbox ( "E.ball?" , 16 , 191 , 52 , 17 )
+GUICtrlSetOnEvent ( - 1 , "khongmua" )
+$RSKIPTICKET = GUICtrlCreateCheckbox ( "Skip Ticket?" , 16 , 211 , 86 , 17 )
+GUICtrlSetOnEvent ( - 1 , "rSkipticketClick" )
+$RADS = GUICtrlCreateCheckbox ( "Ads?" , 72 , 191 , 45 , 17 )
+GUICtrlSetOnEvent ( - 1 , "rAdsClick" )
+GUICtrlSetState ( - 1 , $GUI_CHECKED )
+; doi xuong duoi danh sach che do (truoc nam canh nut Story/Raid)
+$RHIDDEN = GUICtrlCreateCheckbox ( "Hidden" , 88 , 155 , 55 , 17 )
+GUICtrlSetOnEvent ( - 1 , "rHiddenClick" )
+$RNEXT = GUICtrlCreateCheckbox ( "Next Dream" , 14 , 155 , 74 , 17 )
+GUICtrlSetOnEvent ( - 1 , "rNextClick" )
+$CHECK = GUICtrlCreateGroup ( "General Options" , 312 , 0 , 113 , 105 )
+$CHECK1 = GUICtrlCreateCheckbox ( "Checking Freeze" , 320 , 16 , 97 , 17 )
+GUICtrlSetState ( - 1 , $GUI_CHECKED )
+GUICtrlSetOnEvent ( - 1 , "check1" )
+$LABEL1 = GUICtrlCreateLabel ( "Time" , 328 , 42 , 27 , 17 )
+GUICtrlSetState ( - 1 , $GUI_DISABLE )
+$IMAXFTIME = GUICtrlCreateInput ( "150" , 360 , 40 , 57 , 21 )
+$RRESTART = GUICtrlCreateCheckbox ( "Resume Match" , 320 , 72 , 89 , 17 )
+GUICtrlSetState ( - 1 , $GUI_CHECKED )
+GUICtrlSetOnEvent ( - 1 , "rRestartClick" )
+GUICtrlCreateGroup ( "" , - 99 , - 99 , 1 , 1 )
+$GAUTOMODE = GUICtrlCreateGroup ( "Auto mode" , 8 , 0 , 137 , 177 )
+; Danh sach che do nap tu auto_modes.ini (thay cho 9 nut radio cu) - xem module MODE EDITOR
+Global $SAMINI = @ScriptDir & "\auto_modes.ini"
+Global $AMMAINIDS[1] = [0]
+Global $AMCURMODE = 0
+Global $HAMFORM = 0
+$LAMMODE = GUICtrlCreateList ( "" , 14 , 16 , 125 , 136 , BitOR ( 0x0001 , 0x0100 , 0x00200000 , 0x00800000 ) )
+GUICtrlSetOnEvent ( - 1 , "AM_MAINSELCLICK" )
+GUICtrlCreateGroup ( "" , - 99 , - 99 , 1 , 1 )
+$BAMEDIT = GUICtrlCreateButton ( "Mode Editor" , 152 , 240 , 80 , 25 )
+GUICtrlSetBkColor ( - 1 , 0x9FC5E8 )
+GUICtrlSetOnEvent ( - 1 , "AMED_OPEN" )
+$BAMQUEUE = GUICtrlCreateButton ( "Lần lượt..." , 236 , 240 , 69 , 25 )
+GUICtrlSetBkColor ( - 1 , 0xB6D7A8 )
+GUICtrlSetOnEvent ( - 1 , "AMQ_OPEN" )
+AM_ENSUREINI ( )
+AM_FILLMAINLIST ( 0 )
+$BASSIGN = GUICtrlCreateButton ( "Assign Window" , 312 , 112 , 113 , 25 )
+GUICtrlSetOnEvent ( - 1 , "bAssignClick" )
+$BRESIZE = GUICtrlCreateButton ( "Resize" , 312 , 176 , 113 , 25 )
+GUICtrlSetOnEvent ( - 1 , "bResizeClick" )
+$BSTART = GUICtrlCreateButton ( "Start" , 312 , 144 , 113 , 25 )
+GUICtrlSetBkColor ( - 1 , 65280 )
+GUICtrlSetOnEvent ( - 1 , "bStartClick" )
+$BEXIT = GUICtrlCreateButton ( "Exit" , 312 , 208 , 113 , 25 )
+GUICtrlSetOnEvent ( - 1 , "bExitClick" )
+$BCUSTOMBTN = GUICtrlCreateButton ( "Custom Click" , 312 , 240 , 113 , 25 )
+GUICtrlSetBkColor ( -1 , 0xFFD966 )
+GUICtrlSetOnEvent ( -1 , "BCUSTOMCLICKOPEN" )
+$BTOGGLE = GUICtrlCreateButton ( "Collapse" , 432 , 240 , 113 , 25 )
+GUICtrlSetOnEvent ( -1 , "BTOGGLECLICK" )
+GUICtrlSetResizing ( $BASSIGN , 802 )
+GUICtrlSetResizing ( $BRESIZE , 802 )
+GUICtrlSetResizing ( $BSTART , 802 )
+GUICtrlSetResizing ( $BEXIT , 802 )
+GUICtrlSetResizing ( $BCUSTOMBTN , 802 )
+GUICtrlSetResizing ( $BTOGGLE , 802 )
+$LBLHUONGDAN = GUICtrlCreateLabel ( "Hướng dẫn sử dụng Auto" , 432 , 8 , 129 , 15 )
+GUICtrlSetFont ( - 1 , 8 , 400 , 4 , "Arial" )
+GUICtrlSetColor ( - 1 , 255 )
+GUICtrlSetOnEvent ( $LBLHUONGDAN , "OpenGoogleDriveLinkhd" )
+GUICtrlSetCursor ( - 1 , 0 )
+$LBLLINKTAIAUTO = GUICtrlCreateLabel ( "Link cập nhật Auto" , 432 , 30 , 129 , 15 )
+GUICtrlSetFont ( - 1 , 8 , 400 , 4 , "Arial" )
+GUICtrlSetColor ( - 1 , 255 )
+GUICtrlSetOnEvent ( $LBLLINKTAIAUTO , "OpenGoogleDriveLinktai" )
+GUICtrlSetCursor ( - 1 , 0 )
+Local $SIMAGEPATH = @ScriptDir & "\VVQ_Momo_QR_.jpg"
+FileInstall ( "VVQ_Momo_QR_.jpg" , $SIMAGEPATH , 1 )
+Local $PIC1 = GUICtrlCreatePic ( $SIMAGEPATH , 450 , 144 , 103 , 90 )
+$LABEL2 = GUICtrlCreateLabel ( "Giúp tiết kiệm thời gian" , 432 , 56 , 111 , 15 )
+$LABEL3 = GUICtrlCreateLabel ( "Hãy ủng hộ để cập nhật auto." , 432 , 104 , 143 , 17 )
+$LABEL5 = GUICtrlCreateLabel ( "Xin cảm ơn!" , 432 , 120 , 60 , 17 )
+$LABEL4 = GUICtrlCreateLabel ( "hoàn thành Story, Dream," , 432 , 70 , 125 , 15 )
+$LABEL7 = GUICtrlCreateLabel ( "Event, World challenge,..." , 432 , 84 , 143 , 15 )
+$SSTATUS = _GUICTRLSTATUSBAR_CREATE ( $MAINFORM )
+_GUICTRLSTATUSBAR_SETMINHEIGHT ( $SSTATUS , 25 )
+Local $APARTS [ 2 ] = [ 470 , - 1 ]   ; phan trai rong de doc het thong bao
+_GUICTRLSTATUSBAR_SETPARTS ( $SSTATUS , $APARTS )
+_GUICTRLSTATUSBAR_SETTEXT ( $SSTATUS , "No Assigned Window Game" , 0 , 0 )
+_GUICTRLSTATUSBAR_SETTEXT ( $SSTATUS , @TAB & @TAB & "Not Ready " , 1 , 0 )
+Global $BCUSTOMBTN
+GUISetState ( @SW_SHOW )
+#EndRegion ### END Koda GUI section ###
 Global $DAXEMADS , $HWND , $GK , $SSR , $HWND2 , $HWND3 , $APOS , $BRUN , $BSELL , $BRETIRE , $BSKIPTICKET , $BADS , $BHIDDEN , $BNEXT , $IMODE , $EVENMODE , $HOSTMODE , $FARMMODE , $MUAMODE , $MUCEVEN , $TREO , $STEXT , $HOSTCD , $HOSTTYPE , $BTEAM , $TEMPOPT1 , $TEMPOPT2 , $DTIMER , $DTIME , $FX1 , $FX2 , $FX3 , $FY1 , $FY2 , $FY3 , $FREEZEGO , $ILASTSEC , $FC1 , $FC2 , $FC3 , $FTIMER , $DFTIME , $CHKRESETADS , $CNTBALL , $CNTTRANSFER , $CNTTRAINING , $CNTREFILL , $OVERREFILL , $CNTSTORY , $CNTBALLTMP , $CNTTRANSFERTMP , $CNTTRAININGTMP , $CNTREFILLTMP , $CNTSTATSTMP , $CNTSTORYTMP , $CNTSTORYTMP2 , $OPTDMTRAINING , $OPTDMBOOST , $OPTDMREFILL , $LOG , $GPOS1X , $GPOS1Y , $GPOS2X , $GPOS2Y , $GPOS3X , $GPOS3Y , $GPOS4X , $GPOS4Y , $GPOS5X , $GPOS5Y , $GPOS5C , $GPOS6X , $GPOS6Y , $GPOS6C , $GPOS7X , $GPOS7Y , $GPOS7C , $GPOS8X , $GPOS8Y , $GPOS8C , $NEXTRESET , $RESETPHASE , $SINITEXT , $DEBUG
 $DEBUG = 0
 $HOSTCD = 0
@@ -18935,17 +18967,17 @@ For $iArg = 1 To $CmdLine[0]
 Next
 Global $SMEMUC = "" , $IMEMUIDX = - 1 , $HMEMUIDXWIN = 0   ; MEMU_ADB: duong dan memuc.exe + so thu tu may MEmu
 Global $ASKIPSLOT[6][2] = [ [ 312 , 150 ] , [ 540 , 150 ] , [ 312 , 253 ] , [ 540 , 253 ] , [ 312 , 355 ] , [ 540 , 355 ] ]   ; BUYSKIP: tam icon 6 o hang
-Global $BCOLLAPSED = False, $uiChangingLayout = False
-Global $uiFrameMask = BitOR($WS_OVERLAPPEDWINDOW, $WS_POPUP)
-Global $uiExpandedFrame = BitAND(_WinAPI_GetWindowLong($MAINFORM, $GWL_STYLE), $uiFrameMask)
-Global $uiDockWindow = 0, $uiDockRect = 0, $uiDockHidden = False
-Global $uiDockWasActive = False, $uiDesktopTimer = TimerInit()
+Global $BTOGGLE, $BCOLLAPSED = False
 Global $BAUTOSTART = True
 Global $BINSTART = False
 Global $SASSIGNINI = @ScriptDir & "\auto_assign.ini"
-Global $uiBindingBusy = False, $boundPid = 0, $boundTitle = "", $claimMutex = 0
-Global $bindingScanTime = TimerInit(), $resumeOnBind = True
-Global $pickedWindow = 0, $pickedPid = 0
+Global $ACFGCTRLS[48] = [ $GAUTOSELL, $CSALLN, $CSALLR, $CSALLSR, $EVENEX1, $EVEN, $CHKTRAINSSR, _
+	$CHKTRAINUR, $CHKUNHEART, $CHKEX, $CHKEVO, $CHKENHANCE, $NHANHOST, $NHANHOST1, $NHANHOST2, _
+	$NHANHOST3, $NHANHOST4, $CAYEVEN, $CAYEVEN1, $CAYEVEN2, $CAYEVEN3, $CAYEVEN4, $CAYEVEN5, _
+	$CAYEVEN6, $LOAIEVEN, $MUABALL, $KHONGMUA, $RSKIPTICKET, $RADS, $RHIDDEN, $RNEXT, $CHECK, _
+	$CHECK1, $LABEL1, $IMAXFTIME, $RRESTART, $GAUTOMODE, $LAMMODE, $BAMEDIT, $BAMQUEUE, _
+	$LBLHUONGDAN, $LBLLINKTAIAUTO, $PIC1, $LABEL2, $LABEL3, _
+	$LABEL5, $LABEL4, $LABEL7 ]
 ; --- Custom Click globals (MUST be declared before the main loop) ---
 Global $SCUSTOMINI      = @ScriptDir & "\custom_clicks.ini"
 Global $ACUSTOM[1][6]
@@ -18976,11 +19008,6 @@ Global $AMIP1 , $AMIP2 , $AMIP3 , $AMCACT , $AMICLICK , $AMIDELAY , $AMINOTE , $
 ; --- Tu dong tim va gan cua so MEmu ngay khi mo Auto ---
 CUSTOM_RELOAD ( )
 GET_GAME_WINDOW ( )
-AdlibRegister("UI_TRACK_WINDOW", 150)
-If @Compiled Then
-    AdlibRegister("UPDATE_AUTO_CHECK", 21600000)
-    UPDATE_AUTO_CHECK()
-EndIf
 ; chay thu rieng phan Daily Bonus: AutoIt3.exe CTDT_auto_custom.au3 /testads
 If $CmdLine[0] >= 1 And $CmdLine[1] = "/testads" Then
 	$BRUN = True
@@ -19007,14 +19034,14 @@ If $CmdLine[0] >= 1 And $CmdLine[1] = "/testevn" Then
 EndIf
 While 1
 	Sleep ( 150 )
-	UI_REFRESH_BINDING()
+	CHECKWINMOVED ( )
 	If $BRUN Then
 		If $TREO = 1 Then
 			CHECKTREO ( )
 		Else
 			$FREEZEGO = 0
 			$ILASTSEC = - 1
-			_GUICTRLSTATUSBAR_SETTEXT ( $SSTATUS , "Đang chạy" , 1 , 0 )
+			_GUICTRLSTATUSBAR_SETTEXT ( $SSTATUS , @TAB & @TAB & "Running... " , 1 , 0 )
 		EndIf
 		; loi ket noi -> Retry (moi che do)
 		NETRETRY ( )
@@ -19047,7 +19074,7 @@ WEnd
 Func FTIME3 ( )
 	AUTOLOG ( "Chong treo: man hinh dung yen qua lau -> dong tab app" )
 	Local $I , $J
-	_GUICTRLSTATUSBAR_SETTEXT ( $SSTATUS , "Đang đóng ứng dụng lỗi" , 1 , 0 )
+	_GUICTRLSTATUSBAR_SETTEXT ( $SSTATUS , @TAB & @TAB & "Close error app" , 1 , 0 )
 	Sleep ( 400 )
 	For $J = 1 To 5
 		If $BRUN = False Then ExitLoop
@@ -19058,20 +19085,11 @@ Func FTIME3 ( )
 	Next
 	CLICKPIXEL ( 441 , 209 , 1285520 , $APOS )
 	Sleep ( 400 )
-	Local $root = $HWND, $wait = TimerInit()
-	While $BRUN And UI_BINDING_VALID() And $root = $HWND And TimerDiff($wait) < 10000
-		Local $dialogs = WinList()
-		For $k = 1 To $dialogs[0][0]
-			Local $dialog = $dialogs[$k][1], $title = StringLower($dialogs[$k][0])
-			If $title <> "hội thoại" And $title <> "hộp thoại" And $title <> "dialog" Then ContinueLoop
-			If WinGetProcess($dialog) <> $boundPid Or _WinAPI_GetAncestor($dialog, $GA_ROOTOWNER) <> $root Then ContinueLoop
-			SENDCLICK4(198 + $APOS[0], 187 + $APOS[1], $APOS, $dialog)
-			ExitLoop 2
-		Next
-		Sleep(150)
-	WEnd
+	$HDIALOG = WinWait ( "[TITLE:há»™i thoáº¡i;CLASS:Qt5QWindowIcon]" , "" , 10 )
+	Sleep ( 400 )
+	SENDCLICK4 ( 198 + $APOS [ 0 ] , 187 + $APOS [ 1 ] , $APOS , $HDIALOG )
 	SAVELOG ( "Freeze" )
-	_GUICTRLSTATUSBAR_SETTEXT ( $SSTATUS , "Đang chạy" , 1 , 0 )
+	_GUICTRLSTATUSBAR_SETTEXT ( $SSTATUS , @TAB & @TAB & "Running..." , 1 , 0 )
 EndFunc
 Func BASSIGNCLICK ( )
 	Local $tPt = DllStructCreate ( "long X;long Y" )
@@ -19088,7 +19106,7 @@ Func BASSIGNCLICK ( )
 		$sT = WinGetTitle ( $hW )
 		If $sT <> $sLast Then
 			$sLast = $sT
-			ToolTip ( "Nhấp vào giả lập để gán. Nhấn Esc để hủy." & @CRLF & "Cửa sổ: " & $sT )
+			ToolTip ( "Click the emulator window to assign" & @CRLF & "Under cursor: " & $sT )
 		EndIf
 		If _ISPRESSED ( "1B" ) Then
 			While _ISPRESSED ( "1B" )
@@ -19100,42 +19118,34 @@ Func BASSIGNCLICK ( )
 			While _ISPRESSED ( "01" )
 				Sleep ( 20 )
 			WEnd
-			Local $processes = ProcessList()
-			If Not IsArray($processes) Or Not IS_EMULATOR_WINDOW($hW, $sT, $processes) Then
-				_GUICTRLSTATUSBAR_SETTEXT($SSTATUS, "Hãy chọn cửa sổ giả lập đang mở.", 0)
-				ExitLoop
-			EndIf
-			If $HWND <> $hW Then
-				If IS_CLAIMED_BY_OTHER($hW) Then
-					_GUICTRLSTATUSBAR_SETTEXT($SSTATUS, "Giả lập này đã được một cửa sổ Auto khác sử dụng.", 0)
-					ExitLoop
-				EndIf
-				; Apply a manual reassignment only after the previous mode returns.
-				$pickedPid = WinGetProcess($hW)
-				$pickedWindow = $hW
-				$BRUN = False
-				$AMTESTING = False
-				AdlibUnRegister("PROCESS_CUSTOM_CLICKS")
-				UI_RUN_BUTTON(False)
-			EndIf
+			If $hW = 0 Or $hW = $MAINFORM Then ContinueLoop
+			RELEASE_WINDOW ( )
+			$HWND = $hW
+			$STEXT = $sT
+			$SINITEXT = $sT
+			$APOS = WinGetPos ( $HWND )
+			CLAIM_WINDOW ( $HWND )
+			WinSetTitle ( $MAINFORM , "" , "CTDT Auto - " & $sT )
+			_GUICTRLSTATUSBAR_SETTEXT ( $SSTATUS , "Window Assigned: " & $sT , 0 , 0 )
+			_GUICTRLSTATUSBAR_SETTEXT ( $SSTATUS , @TAB & @TAB & "Ready " , 1 , 0 )
+			DOCK_TO_GAME ( )
 			ExitLoop
 		EndIf
 		Sleep ( 60 )
 	WEnd
 	ToolTip ( "" )
+	AUTO_START_IF_IDLE ( )
 EndFunc
 Func BEXITCLICK ( )
 	RELEASE_WINDOW ( )
 	Exit
 EndFunc
-Func BRESIZECLICK()
-	If Not $HWND Or Not WinExists($HWND) Then
-		_GUICtrlStatusBar_SetText($SSTATUS, "Hãy gán cửa sổ giả lập trước khi chỉnh kích thước.", 0)
-		Return
-	EndIf
-	Local $pos = WinGetPos($HWND)
-	If Not IsArray($pos) Then Return
-	If WinMove($HWND, "", $pos[0], $pos[1], 841, 433) Then _GUICtrlStatusBar_SetText($SSTATUS, "Đã chỉnh kích thước · " & $STEXT, 0)
+Func BRESIZECLICK ( )
+	_GUICTRLSTATUSBAR_SETTEXT ( $SSTATUS , "Test: " & $STEXT , 0 , 0 )
+	$HWND = WinWait ( "[TITLE:" & $STEXT & "]" , "" , 1 )
+	_GUICTRLSTATUSBAR_SETTEXT ( $SSTATUS , "Test: " & $HWND , 0 , 0 )
+	Sleep ( 200 )
+	WinMove ( $HWND , "" , $APOS [ 0 ] , $APOS [ 1 ] , 841 , 433 )
 EndFunc
 Func WINCHECKSIZE ( )
 	Dim $ASIZE = WinGetClientSize ( $HWND )
@@ -19147,22 +19157,24 @@ Func WINCHECKSIZE ( )
 EndFunc
 Func BSTARTCLICK ( $bSilent = False )
 	$BINSTART = True
-	If Not UI_BINDING_VALID() Then GET_GAME_WINDOW(True)
+	If $HWND = "" Or $HWND = 0 Or Not WinExists ( $HWND ) Then GET_GAME_WINDOW ( True )
 	$BINSTART = False
-	If Not UI_BINDING_VALID() Then
-		If Not $bSilent Then MsgBox ( 48 , "Chưa tìm thấy giả lập" , "Hãy mở MEmu hoặc nhấn Gán cửa sổ để chọn giả lập." )
+	If $HWND = "" Or $HWND = 0 Then
+		If Not $bSilent Then MsgBox ( 48 , "No Emulator Found" , "No free emulator window was found." & @CRLF & "Open MEmu, or use [Assign Window] to pick it manually." )
 		Return
 	EndIf
 	If Not WINCHECKSIZE ( ) Then
-		If Not $bSilent Then MsgBox ( 0 , "Kích thước cửa sổ" , "CTDT Auto sẽ chỉnh kích thước cửa sổ giả lập để chạy." )
+		If Not $bSilent Then MsgBox ( 0 , "Error" , "Game Window must be 800x400 to run auto. Resize now?" )
 		WinMove ( $HWND , "" , $APOS [ 0 ] , $APOS [ 1 ] , 841 , 433 )
 	EndIf
 	If $BRUN Then
 		$BRUN = False
 		AdlibUnRegister ( "PROCESS_CUSTOM_CLICKS" )
 		; Khong tu mo rong cua so khi Stop - muon mo thi bam nut Expand
-		_GUICTRLSTATUSBAR_SETTEXT ( $SSTATUS , "Sẵn sàng" , 1 , 0 )
-		UI_RUN_BUTTON(False)
+		_GUICTRLSTATUSBAR_SETTEXT ( $SSTATUS , @TAB & @TAB & "Ready " , 1 , 0 )
+		GUICtrlSetData ( $BSTART , "Start" )
+		GUICtrlSetColor ( $BSTART , 0 )
+		GUICtrlSetBkColor ( $BSTART , 65280 )
 		$FREEZEGO = 0
 		$ILASTSEC = - 1
 	Else
@@ -19172,8 +19184,10 @@ Func BSTARTCLICK ( $bSilent = False )
 		CUSTOM_RELOAD ( )
 		AdlibRegister ( "PROCESS_CUSTOM_CLICKS" , 250 )
 		SET_COLLAPSED ( True )
-		_GUICTRLSTATUSBAR_SETTEXT ( $SSTATUS , "Đang chạy" , 1 , 0 )
-		UI_RUN_BUTTON(True)
+		_GUICTRLSTATUSBAR_SETTEXT ( $SSTATUS , @TAB & @TAB & "Running... " , 1 , 0 )
+		GUICtrlSetData ( $BSTART , "Stop" )
+		GUICtrlSetColor ( $BSTART , 16777215 )
+		GUICtrlSetBkColor ( $BSTART , 16711680 )
 		$CNTTRANSFER = 0
 		$CNTREFILL = 0
 		$CNTSTORY = 0
@@ -19295,37 +19309,28 @@ EndFunc
 Func CDMTRANSFERCLICK ( )
 	RELOADMODE ( )
 EndFunc
-Func TRAINSSRCLICK()
-    GUICtrlSetState($CAYEVEN2, $GUI_CHECKED)
-    RELOADMODE()
-    Local $iOldOpt = Opt("GUIOnEventMode", 0)
-    Local $hGUI = GUICreate("Hướng dẫn huấn luyện • CTDT Auto", 604, 354, -1, -1, BitOR($WS_CAPTION, $WS_SYSMENU, $WS_POPUP), -1, $MAINFORM)
-    GUISetFont(9, 400, 0, "Segoe UI")
-    GUISetBkColor($UI_BG)
-    UI_HEADER("Hướng dẫn huấn luyện", "Chuẩn bị trong game trước khi bắt đầu chạy tự động.", 604)
-
-    UI_TITLE("Huấn luyện SSR hoặc gỡ tim", 22, 84, 560)
-    GUICtrlCreateLabel("1. Đánh dấu tim cho các thẻ SSR cần huấn luyện. Chọn nâng EX, tiến hóa +4 hoặc nâng kỹ năng. Nếu nâng kỹ năng, chọn trước mốc Max99, 70, 50 hoặc 30.", 22, 113, 560, 42)
-    GUICtrlCreateLabel("2. Để gỡ tim cho các thẻ SSR và UR, chọn Gỡ tim.", 22, 156, 560, 21)
-    GUICtrlCreateLabel("3. Vào PLAYERS > PLAYER LIST/EVOLVE trong game và lọc các thẻ đã đánh dấu tim. Nhấn Bắt đầu trong CTDT Auto.", 22, 181, 560, 40)
-    GUICtrlCreateLabel("Huấn luyện SSR chỉ nâng các mục đã chọn. Hidden và Limit Release chưa được hỗ trợ.", 22, 224, 560, 22)
-    GUICtrlSetColor(-1, $UI_MUTED)
-
-    UI_TITLE("Friend Point Transfer", 22, 255, 560)
-    GUICtrlCreateLabel("Mở màn hình Friend Point Transfer trong game, sau đó nhấn Bắt đầu.", 22, 282, 560, 22)
-
-    Local $btnOK = GUICtrlCreateButton("Đã hiểu", 462, 310, 120, 30, $BS_DEFPUSHBUTTON)
-    GUICtrlSetBkColor($btnOK, $UI_TEAL)
-    GUICtrlSetColor($btnOK, 0xFFFFFF)
-    GUISetState(@SW_SHOW, $hGUI)
-    While 1
-        Switch GUIGetMsg()
-            Case $GUI_EVENT_CLOSE, $btnOK
-                ExitLoop
-        EndSwitch
-    WEnd
-    GUIDelete($hGUI)
-    Opt("GUIOnEventMode", $iOldOpt)
+Func TRAINSSRCLICK ( )
+	GUICtrlSetState ( $CAYEVEN2 , $GUI_CHECKED )
+	RELOADMODE ( )
+	Local $IOLDOPT = Opt ( "GUIOnEventMode" , 0 )
+	Local $HGUI = GUICreate ( "Hướng dẫn Training SSR / Gỡ ♥ (1-2-3) và Friend Point Transfer (4):" , 450 , 200 , - 1 , - 1 , BitOR ( $WS_CAPTION , $WS_SYSMENU , $WS_POPUP ) )
+	GUICtrlCreateLabel ( "1. Chọn đánh dấu TYM cho các thẻ SSR cần train. Tick chọn để nâng EX/+4/Skills theo nhu cầu. Chọn trước mốc Max99/70/50/30 cho Enhance Skills (nếu cần)." , 15 , 15 , 440 , 32 )
+	GUICtrlCreateLabel ( "2. Tick chọn Gỡ ♥ nếu cần gỡ TYM cho tất cả thẻ SSR/UR." , 15 , 51 , 440 , 17 )
+	GUICtrlCreateLabel ( "3. Chọn vào PLAYERS > PLAYER LIST/EVOLVE > Chọn lọc các thẻ đã gán TYM => Chọn START trên auto để train SSR hoặc Gỡ TYM cho SSR/UR." , 15 , 72 , 410 , 32 )
+	GUICtrlCreateLabel ( "4. Chọn vào sẵn màn hình Friend Point Transfer => Chọn START trên auto để transfer." , 15 , 110 , 440 , 17 )
+	GUICtrlCreateLabel ( "(Training SSR không hỗ trợ nâng các dòng Hidden && Limit Release)" , 15 , 131 , 440 , 18 , 1 )
+	GUICtrlSetColor ( - 1 , 16711680 )
+	GUICtrlSetFont ( - 1 , 9 , 400 , 2 )
+	Local $BTNOK = GUICtrlCreateButton ( "OK" , 175 , 150 , 100 , 30 )
+	GUISetState ( @SW_SHOW , $HGUI )
+	While 1
+		Switch GUIGetMsg ( )
+		Case $GUI_EVENT_CLOSE , $BTNOK
+			ExitLoop
+		EndSwitch
+	WEnd
+	GUIDelete ( $HGUI )
+	Opt ( "GUIOnEventMode" , $IOLDOPT )
 EndFunc
 Func LEAGUE ( )
 	GUICtrlSetState ( $CAYEVEN2 , $GUI_CHECKED )
@@ -19563,9 +19568,11 @@ Func RELOADMODE ( )
 	If GUICtrlRead ( $CAYEVEN6 ) = 1 Then
 		$FARMMODE = 6
 	EndIf
-	; The four event presets are followed by the custom preset (value 0).
-	$MUCEVEN = GUICtrlSendMsg($LOAIEVEN, $CB_GETCURSEL, 0, 0) + 1
-	If $MUCEVEN = 5 Then $MUCEVEN = 0
+	If GUICtrlRead ( $LOAIEVEN ) = "Even mode 1" Then $MUCEVEN = 1
+	If GUICtrlRead ( $LOAIEVEN ) = "Even mode 2" Then $MUCEVEN = 2
+	If GUICtrlRead ( $LOAIEVEN ) = "Even mode 3" Then $MUCEVEN = 3
+	If GUICtrlRead ( $LOAIEVEN ) = "Even mode 4" Then $MUCEVEN = 4
+	If GUICtrlRead ( $LOAIEVEN ) = "Custom" Then $MUCEVEN = 0
 	If GUICtrlRead ( $NHANHOST1 ) = 1 Then $HOSTMODE = 0
 	If GUICtrlRead ( $NHANHOST2 ) = 1 Then $HOSTMODE = 1
 	If GUICtrlRead ( $NHANHOST3 ) = 1 Then $HOSTMODE = 2
@@ -19601,54 +19608,16 @@ Func RELOADMODE ( )
 		$TREO = 0
 	EndIf
 EndFunc
-; A timer keeps the panel attached during long-running modes and editor callbacks.
-; Dock geometry is independent of $APOS, which the picker and game code also update.
-Func UI_TRACK_WINDOW()
-    If $uiChangingLayout Or $uiBindingBusy Then Return
-    If Not $HWND Or Not UI_BINDING_VALID() Then
-        If $HWND Then UI_BIND_LOST()
-        If $uiDockHidden Then _WinAPI_ShowWindow($MAINFORM, @SW_SHOWNOACTIVATE)
-        If $uiDockWindow And $BCOLLAPSED Then UI_STATUS_LAYOUT()
-        $uiDockWindow = 0
-        $uiDockRect = 0
-        $uiDockWasActive = False
-        $uiDockHidden = False
-        Return
-    EndIf
-
-    Local $state = WinGetState($HWND)
-    If BitAND($state, 16) Or Not BitAND($state, 2) Then
-        If Not $uiDockHidden And BitAND(WinGetState($MAINFORM), 2) And Not BitAND(WinGetState($MAINFORM), 16) Then
-            $uiDockHidden = True
-            _WinAPI_ShowWindow($MAINFORM, @SW_HIDE)
-        EndIf
-        $uiDockRect = 0
-        $uiDockWasActive = False
-        Return
-    EndIf
-    If BitAND(WinGetState($MAINFORM), 16) Then Return
-
-    Local $position = WinGetPos($HWND)
-    If Not IsArray($position) Then Return
-    Local $changed = ($uiDockWindow <> $HWND)
-    If $changed And $BCOLLAPSED Then UI_STATUS_LAYOUT()
-    If $changed Or Not IsArray($uiDockRect) Or $position[0] <> $uiDockRect[0] Or $position[1] <> $uiDockRect[1] Or _
-            $position[2] <> $uiDockRect[2] Or $position[3] <> $uiDockRect[3] Then DOCK_TO_GAME($position)
-    If $uiDockHidden Then
-        _WinAPI_ShowWindow($MAINFORM, @SW_SHOWNOACTIVATE)
-        $uiDockHidden = False
-    EndIf
-
-    Local $active = (_WinAPI_GetForegroundWindow() = $HWND)
-    If $active And Not $uiDockWasActive Then
-        ; Show the matching console above the game without activating it.
-        _WinAPI_SetWindowPos($MAINFORM, $HWND_TOP, 0, 0, 0, 0, BitOR($SWP_NOACTIVATE, $SWP_NOMOVE, $SWP_NOSIZE))
-    EndIf
-    $uiDockWasActive = $active
-    If TimerDiff($uiDesktopTimer) >= 1500 Then
-        $uiDesktopTimer = TimerInit()
-        If Not VD_SAMEDESKTOP($MAINFORM, $HWND) Then VD_MOVETOWINDOW($MAINFORM, $HWND)
-    EndIf
+Func CHECKWINMOVED ( )
+	If $HWND = "" Or $HWND = 0 Then Return
+	If Not WinExists ( $HWND ) Then Return
+	Local $APOS1 = WinGetPos ( $HWND )
+	If Not IsArray ( $APOS1 ) Then Return
+	If Not IsArray ( $APOS ) Or $APOS [ 0 ] <> $APOS1 [ 0 ] Or $APOS [ 1 ] <> $APOS1 [ 1 ] _
+		Or $APOS [ 2 ] <> $APOS1 [ 2 ] Or $APOS [ 3 ] <> $APOS1 [ 3 ] Then
+		$APOS = $APOS1
+		DOCK_TO_GAME ( )
+	EndIf
 EndFunc
 Func MEMORYREADPIXEL ( $X , $Y , $HANDLE )
 	Local $HDC
@@ -19912,7 +19881,7 @@ Func CHECKTREO ( )
 			$DFTIME = TimerDiff ( $FTIMER )
 			Local $VAL = Int ( $DFTIME / 1000 )
 			If $VAL <> $ILASTSEC Then
-				_GUICTRLSTATUSBAR_SETTEXT ( $SSTATUS , "Kiểm tra treo · " & $VAL & " giây" , 1 , 0 )
+				_GUICTRLSTATUSBAR_SETTEXT ( $SSTATUS , @TAB & @TAB & "Checking freeze... " & $VAL & "s" , 1 , 0 )
 				$ILASTSEC = $VAL
 			EndIf
 			If $VAL > GUICtrlRead ( $IMAXFTIME ) Then
@@ -20005,38 +19974,7 @@ Func UPDATE_CHECK_GITHUB($bSilent = True)
     Exit
 EndFunc
 
-Func UPDATE_OPEN()
-    If $updateForm And WinExists($updateForm) Then
-        WinActivate($updateForm)
-        Return
-    EndIf
-    $updateForm = GUICreate("Cập nhật CtdtAuto", 502, 242, -1, -1, -1, -1, $MAINFORM)
-    GUISetFont(9, 400, 0, "Segoe UI", $updateForm)
-    GUISetBkColor($UI_BG, $updateForm)
-    GUISetOnEvent($GUI_EVENT_CLOSE, "UPDATE_CLOSE", $updateForm)
-    UI_HEADER("Cập nhật CtdtAuto", "Phiên bản đang dùng  ·  v" & $UPDATE_VERSION, 502)
-    UI_TITLE("Trạng thái", 22, 84, 460)
-    $updateStatusLabel = GUICtrlCreateLabel("Hệ thống tự động kiểm tra phiên bản mới trên GitHub khi khởi động.", 22, 113, 458, 46, $SS_NOPREFIX)
-    GUICtrlSetColor($updateStatusLabel, $UI_INK)
-    GUICtrlCreateLabel("Máy chủ phát hành: https://github.com/taivadlc25/CtdtAuto", 22, 163, 458, 22)
-    GUICtrlSetColor(-1, $UI_MUTED)
-    UI_BUTTON("Kiểm tra ngay", 22, 195, 128, 32, "UPDATE_MANUAL_CHECK", True)
-    UI_BUTTON("Mở GitHub Releases", 160, 195, 160, 32, "UPDATE_OPEN_GITHUB")
-    UI_BUTTON("Đóng", 401, 195, 79, 32, "UPDATE_CLOSE")
-    GUISetState(@SW_SHOW, $updateForm)
-EndFunc
-
-Func UPDATE_CLOSE()
-    If $updateForm Then GUIDelete($updateForm)
-    $updateForm = 0
-    $updateStatusLabel = 0
-EndFunc
-
-Func UPDATE_OPEN_GITHUB()
-    ShellExecute($GITHUB_REPO_URL & "/releases")
-EndFunc
-
-Func UPDATE_MANUAL_CHECK()
+Func OPENGOOGLEDRIVELINKTAI()
     UPDATE_CHECK_GITHUB(False)
 EndFunc
 
@@ -20182,8 +20120,10 @@ Func DAILY_FINISH ( )
 	EndIf
 	DAILY_STEP ( 7 , "xong hết việc hôm nay" )
 	$BRUN = False
-	_GUICTRLSTATUSBAR_SETTEXT ( $SSTATUS , "Sẵn sàng" , 1 , 0 )
-	UI_RUN_BUTTON(False)
+	_GUICTRLSTATUSBAR_SETTEXT ( $SSTATUS , @TAB & @TAB & "Ready " , 1 , 0 )
+	GUICtrlSetData ( $BSTART , "Start" )
+	GUICtrlSetColor ( $BSTART , 0 )
+	GUICtrlSetBkColor ( $BSTART , 65280 )
 	AM_QUEUENEXT ( )   ; chay lan luot: sang che do ke (neu co)
 EndFunc
 Func AUTOEVOL ( )
@@ -21111,8 +21051,10 @@ Func WOCHALLENGE ( )
 		; Het luot: chay cac option kieu "Khi che do xong" (Mode Editor) truoc khi dung
 		AM_ONFINISH ( $IMODE )
 		$BRUN = False
-		_GUICTRLSTATUSBAR_SETTEXT ( $SSTATUS , "Sẵn sàng" , 1 , 0 )
-		UI_RUN_BUTTON(False)
+		_GUICTRLSTATUSBAR_SETTEXT ( $SSTATUS , @TAB & @TAB & "Ready " , 1 , 0 )
+		GUICtrlSetData ( $BSTART , "Start" )
+		GUICtrlSetColor ( $BSTART , 0 )
+		GUICtrlSetBkColor ( $BSTART , 65280 )
 		; WinSetState ( $MAINFORM , "" , @SW_RESTORE ) ; tat: khong tu bung cua so khi auto dung
 		AM_QUEUENEXT ( )   ; chay lan luot: sang che do ke (neu co)
 	EndIf
@@ -21756,31 +21698,26 @@ EndFunc
 ; ---------- lenh ADB cho dung may MEmu dang gan (vuot man hinh ma PostMessage khong lam duoc) ----------
 ; toa do Android = toa do cua so - (1, 33)  (man hinh game 800x400)
 Func MEMU_ADB ( $sCmd )
-	If Not UI_BINDING_VALID() Then Return False
-	Local $target = $HWND
 	If $SMEMUC = "" Then
 		Local $sExe = _WINAPI_GETPROCESSFILENAME ( WinGetProcess ( $HWND ) )
 		If $sExe = "" Then Return False
 		$SMEMUC = StringRegExpReplace ( $sExe , "[^\\]+$" , "" ) & "memuc.exe"
 	EndIf
 	If Not FileExists ( $SMEMUC ) Then Return False
-	If $IMEMUIDX < 0 Or $HMEMUIDXWIN <> $target Then
-		$IMEMUIDX = -1
-		$HMEMUIDXWIN = 0
+	If $IMEMUIDX < 0 Or $HMEMUIDXWIN <> $HWND Then
 		Local $iPid = Run ( '"' & $SMEMUC & '" listvms' , "" , @SW_HIDE , $STDOUT_CHILD )
 		ProcessWaitClose ( $iPid , 15 )
 		Local $aL = StringSplit ( StringStripCR ( StdoutRead ( $iPid ) ) , @LF )
 		For $i = 1 To $aL [ 0 ]
 			Local $a = StringSplit ( $aL [ $i ] , "," )
-			If $a [ 0 ] >= 3 And Number ( $a [ 3 ] ) = Number ( Int ( $target ) ) Then
+			If $a [ 0 ] >= 3 And Number ( $a [ 3 ] ) = Number ( Int ( $HWND ) ) Then
 				$IMEMUIDX = Number ( $a [ 1 ] )
-				$HMEMUIDXWIN = $target
+				$HMEMUIDXWIN = $HWND
 				ExitLoop
 			EndIf
 		Next
 		If $IMEMUIDX < 0 Then Return False
 	EndIf
-	If $target <> $HWND Or Not UI_BINDING_VALID() Then Return False
 	RunWait ( '"' & $SMEMUC & '" -i ' & $IMEMUIDX & ' adb "' & $sCmd & '"' , "" , @SW_HIDE )
 	Return True
 EndFunc
@@ -22327,8 +22264,10 @@ Func EVENTNEW ( )
 		_GUICTRLSTATUSBAR_SETTEXT ( $SSTATUS , "Event: đã clear hết map -> dừng" , 0 , 0 )
 		AUTOLOG ( "Event: khong con map chua clear (hoac da thua 2 lan hom nay) -> DUNG AUTO" )
 		$BRUN = False
-		_GUICTRLSTATUSBAR_SETTEXT ( $SSTATUS , "Sẵn sàng" , 1 , 0 )
-		UI_RUN_BUTTON(False)
+		_GUICTRLSTATUSBAR_SETTEXT ( $SSTATUS , @TAB & @TAB & "Ready " , 1 , 0 )
+		GUICtrlSetData ( $BSTART , "Start" )
+		GUICtrlSetColor ( $BSTART , 0 )
+		GUICtrlSetBkColor ( $BSTART , 65280 )
 		AM_QUEUENEXT ( )   ; chay lan luot: sang che do ke (neu co)
 		Return True
 	EndIf
@@ -22967,8 +22906,10 @@ Func FOLDERSOLO2024 ( )
 		; Het man: chay cac option kieu "Khi che do xong" (Mode Editor) truoc khi dung
 		AM_ONFINISH ( $IMODE )
 		$BRUN = False
-		_GUICTRLSTATUSBAR_SETTEXT ( $SSTATUS , "Sẵn sàng" , 1 , 0 )
-		UI_RUN_BUTTON(False)
+		_GUICTRLSTATUSBAR_SETTEXT ( $SSTATUS , @TAB & @TAB & "Ready " , 1 , 0 )
+		GUICtrlSetData ( $BSTART , "Start" )
+		GUICtrlSetColor ( $BSTART , 0 )
+		GUICtrlSetBkColor ( $BSTART , 65280 )
 		; WinSetState ( $MAINFORM , "" , @SW_RESTORE ) ; tat: khong tu bung cua so khi auto dung
 		AM_QUEUENEXT ( )   ; chay lan luot: sang che do ke (neu co)
 	EndIf
@@ -23255,7 +23196,7 @@ EndFunc
 ; =============================================================================
 Func CUSTOM_PICK($bColor = True)
 	If $HWND = "" Or $HWND = 0 Then
-		MsgBox(48 + 262144, "Chưa gắn cửa sổ game", "Hãy gắn cửa sổ game trong bảng điều khiển trước khi lấy điểm.")
+		MsgBox(48 + 262144, "No Window Assigned", "Click [Assign Window] and select the game window first.")
 		Return ""
 	EndIf
 	$APOS = WinGetPos($HWND)
@@ -23273,15 +23214,15 @@ Func CUSTOM_PICK($bColor = True)
 		$bHidAM = True
 	EndIf
 
-	$HZOOMGUI = GUICreate("Lấy điểm", 170, 196, -1, -1, $WS_POPUP, BitOR($WS_EX_TOPMOST, $WS_EX_TOOLWINDOW))
-	GUISetBkColor($UI_NAVY, $HZOOMGUI)
-	$IZOOMLBL = GUICtrlCreateLabel("", 0, 170, 170, 26, BitOR($SS_CENTER, $SS_CENTERIMAGE))
-	GUICtrlSetColor($IZOOMLBL, 0xFFFFFF)
-	GUICtrlSetBkColor($IZOOMLBL, $UI_NAVY)
+	$HZOOMGUI = GUICreate("zoom", 170, 196, -1, -1, $WS_POPUP, BitOR($WS_EX_TOPMOST, $WS_EX_TOOLWINDOW))
+	GUISetBkColor(0x000000, $HZOOMGUI)
+	$IZOOMLBL = GUICtrlCreateLabel("", 0, 170, 170, 26, 0x01)
+	GUICtrlSetColor($IZOOMLBL, 0xFFFF00)
+	GUICtrlSetBkColor($IZOOMLBL, 0x000000)
 	GUICtrlSetFont($IZOOMLBL, 9, 600, 0, "Consolas")
 	GUISetState(@SW_SHOWNOACTIVATE, $HZOOMGUI)
 
-	ToolTip("Nhấp chuột phải để lấy điểm. Nhấn Esc để hủy.")
+	ToolTip("RIGHT-CLICK = pick point     ESC = cancel")
 
 	While _IsPressed("02")
 		Sleep(20)
@@ -23400,60 +23341,58 @@ EndFunc
 ;  CONFIGURATION FORM
 ; =============================================================================
 Func BCUSTOMCLICKOPEN()
-    If $HCUSTOMFORM <> 0 And WinExists($HCUSTOMFORM) Then
-        GUISetState(@SW_SHOW, $HCUSTOMFORM)
-        WinActivate($HCUSTOMFORM)
-        Return
-    EndIf
+	If $HCUSTOMFORM <> 0 And WinExists($HCUSTOMFORM) Then
+		GUISetState(@SW_SHOW, $HCUSTOMFORM)
+		WinActivate($HCUSTOMFORM)
+		Return
+	EndIf
 
-    $HCUSTOMFORM = GUICreate("Quy tắc bấm • CTDT Auto", 824, 510, -1, -1, -1, $WS_EX_TOPMOST)
-    GUISetFont(9, 400, 0, "Segoe UI")
-    GUISetBkColor($UI_BG)
-    GUISetOnEvent($GUI_EVENT_CLOSE, "CUSTOM_FORMCLOSE", $HCUSTOMFORM)
-    UI_HEADER("Quy tắc bấm", "Tự động bấm vào một vị trí khi các điểm màu đã chọn cùng khớp.", 824)
+	$HCUSTOMFORM = GUICreate("Custom Click - custom_clicks.ini", 700, 400, -1, -1, -1, $WS_EX_TOPMOST)
+	GUISetOnEvent($GUI_EVENT_CLOSE, "CUSTOM_FORMCLOSE", $HCUSTOMFORM)
 
-    UI_TITLE("Điều kiện màu", 22, 84, 360)
-    GUICtrlCreateLabel("Chọn ít nhất một điểm trên cửa sổ game.", 22, 110, 364, 20)
-    GUICtrlSetColor(-1, $UI_MUTED)
-    GUICtrlCreateLabel("Điểm 1", 22, 144, 54, 20)
-    $IP1 = GUICtrlCreateInput("", 81, 139, 195, 28)
-    UI_BUTTON("Lấy điểm", 284, 138, 96, 30, "CUSTOM_PICK1")
-    GUICtrlCreateLabel("Điểm 2", 22, 181, 54, 20)
-    $IP2 = GUICtrlCreateInput("", 81, 176, 195, 28)
-    UI_BUTTON("Lấy điểm", 284, 175, 96, 30, "CUSTOM_PICK2")
-    GUICtrlCreateLabel("Điểm 3", 22, 218, 54, 20)
-    $IP3 = GUICtrlCreateInput("", 81, 213, 195, 28)
-    UI_BUTTON("Lấy điểm", 284, 212, 96, 30, "CUSTOM_PICK3")
+	GUICtrlCreateLabel("Condition point 1 (at least one required):", 10, 12, 230, 17)
+	$IP1 = GUICtrlCreateInput("", 240, 10, 190, 21)
+	GUICtrlCreateButton("Pick...", 436, 8, 60, 24)
+	GUICtrlSetOnEvent(-1, "CUSTOM_PICK1")
 
-    UI_TITLE("Hành động", 424, 84, 360)
-    GUICtrlCreateLabel("Chọn vị trí sẽ bấm khi thỏa điều kiện màu.", 424, 110, 378, 20)
-    GUICtrlSetColor(-1, $UI_MUTED)
-    GUICtrlCreateLabel("Vị trí bấm", 424, 144, 92, 20)
-    $IPCLICK = GUICtrlCreateInput("", 524, 139, 174, 28)
-    UI_BUTTON("Lấy vị trí", 706, 138, 96, 30, "CUSTOM_PICKCLICK")
-    GUICtrlCreateLabel("Chờ sau bấm", 424, 181, 96, 20)
-    $IPDELAY = GUICtrlCreateInput("200", 524, 176, 80, 28)
-    GUICtrlCreateLabel("ms", 612, 181, 30, 20)
-    GUICtrlSetColor(-1, $UI_MUTED)
-    GUICtrlCreateLabel("Ghi chú", 424, 218, 92, 20)
-    $IPNOTE = GUICtrlCreateInput("", 524, 213, 278, 28)
+	GUICtrlCreateLabel("Condition point 2 (optional):", 10, 42, 230, 17)
+	$IP2 = GUICtrlCreateInput("", 240, 40, 190, 21)
+	GUICtrlCreateButton("Pick...", 436, 38, 60, 24)
+	GUICtrlSetOnEvent(-1, "CUSTOM_PICK2")
 
-    UI_TITLE("Danh sách quy tắc", 22, 262, 340)
-    GUICtrlCreateLabel("Mỗi dòng là một quy tắc. Bạn có thể sửa trực tiếp trước khi lưu.", 22, 286, 599, 20)
-    GUICtrlSetColor(-1, $UI_MUTED)
-    UI_BUTTON("Thêm vào danh sách", 640, 268, 162, 32, "CUSTOM_ADD")
+	GUICtrlCreateLabel("Condition point 3 (optional):", 10, 72, 230, 17)
+	$IP3 = GUICtrlCreateInput("", 240, 70, 190, 21)
+	GUICtrlCreateButton("Pick...", 436, 68, 60, 24)
+	GUICtrlSetOnEvent(-1, "CUSTOM_PICK3")
 
-    $ECUSTOMLIST = GUICtrlCreateEdit("", 22, 312, 780, 136, BitOR($WS_VSCROLL, $WS_HSCROLL, $ES_WANTRETURN, $ES_MULTILINE, $ES_AUTOHSCROLL, $ES_AUTOVSCROLL))
-    GUICtrlSetFont($ECUSTOMLIST, 10, 400, 0, "Consolas")
-    GUICtrlCreateLabel("custom_clicks.ini", 22, 472, 150, 20)
-    GUICtrlSetColor(-1, $UI_MUTED)
-    GUICtrlSetTip(-1, $SCUSTOMINI)
-    UI_BUTTON("Tải lại từ tệp", 182, 462, 114, 32, "CUSTOM_LOADUI")
-    UI_BUTTON("Đóng", 592, 462, 82, 32, "CUSTOM_FORMCLOSE")
-    UI_BUTTON("Lưu quy tắc", 682, 462, 120, 32, "CUSTOM_SAVE", True)
+	GUICtrlCreateLabel("CLICK target (required):", 10, 102, 230, 17)
+	$IPCLICK = GUICtrlCreateInput("", 240, 100, 190, 21)
+	GUICtrlCreateButton("Pick...", 436, 98, 60, 24)
+	GUICtrlSetOnEvent(-1, "CUSTOM_PICKCLICK")
 
-    CUSTOM_LOADUI()
-    GUISetState(@SW_SHOW, $HCUSTOMFORM)
+	GUICtrlCreateLabel("Delay after click (ms):", 10, 132, 230, 17)
+	$IPDELAY = GUICtrlCreateInput("200", 240, 130, 60, 21)
+
+	GUICtrlCreateLabel("Note:", 10, 162, 230, 17)
+	$IPNOTE = GUICtrlCreateInput("", 240, 160, 190, 21)
+
+	GUICtrlCreateButton("Add rule to list", 240, 190, 190, 26)
+	GUICtrlSetOnEvent(-1, "CUSTOM_ADD")
+
+	GUICtrlCreateLabel("Rule list (editable, one rule per line):", 10, 226, 400, 17)
+	$ECUSTOMLIST = GUICtrlCreateEdit("", 10, 246, 680, 110, BitOR(0x00200000, 0x1000, 0x0004))
+
+	GUICtrlCreateButton("Save to INI", 10, 364, 110, 26)
+	GUICtrlSetOnEvent(-1, "CUSTOM_SAVE")
+	GUICtrlCreateButton("Reload from INI", 126, 364, 110, 26)
+	GUICtrlSetOnEvent(-1, "CUSTOM_LOADUI")
+	GUICtrlCreateButton("Close", 580, 364, 110, 26)
+	GUICtrlSetOnEvent(-1, "CUSTOM_FORMCLOSE")
+
+	GUICtrlCreateLabel("File: " & $SCUSTOMINI, 250, 370, 320, 17)
+
+	CUSTOM_LOADUI()
+	GUISetState(@SW_SHOW, $HCUSTOMFORM)
 EndFunc
 
 Func CUSTOM_FORMCLOSE()
@@ -23489,11 +23428,12 @@ Func CUSTOM_ADD()
 	Local $nt = StringStripWS(GUICtrlRead($IPNOTE), 3)
 
 	If $c1 = "" And $c2 = "" And $c3 = "" Then
-		MsgBox(48 + 262144, "Thiếu điều kiện màu", "Hãy nhập hoặc lấy ít nhất một điểm màu cho quy tắc.", 0, $HCUSTOMFORM)
+		MsgBox(48 + 262144, "Missing condition", "At least one condition point is required." & @CRLF & _
+			"Without it the Auto would click blindly.", 0, $HCUSTOMFORM)
 		Return
 	EndIf
 	If $ck = "" Then
-		MsgBox(48 + 262144, "Thiếu vị trí bấm", "Hãy nhập hoặc lấy vị trí cần bấm.", 0, $HCUSTOMFORM)
+		MsgBox(48 + 262144, "Missing click target", "No CLICK target has been picked.", 0, $HCUSTOMFORM)
 		Return
 	EndIf
 	If Number($dl) <= 0 Then $dl = "200"
@@ -23524,7 +23464,7 @@ Func CUSTOM_SAVE()
 	IniWrite($SCUSTOMINI, "Config", "Total", String($n))
 	IniWrite($SCUSTOMINI, "Config", "Enabled", "1")
 	CUSTOM_RELOAD()
-	MsgBox(64 + 262144, "Đã lưu", "Đã lưu " & $n & " quy tắc vào tệp" & @CRLF & $SCUSTOMINI, 0, $HCUSTOMFORM)
+	MsgBox(64 + 262144, "Saved", "Saved " & $n & " rule(s) to:" & @CRLF & $SCUSTOMINI, 0, $HCUSTOMFORM)
 EndFunc
 
 Func CUSTOM_LOADUI()
@@ -23742,7 +23682,6 @@ Func AM_FILLMAINLIST($iSelMode = 0)
 		If $AMMAINIDS[$i] = $iSelMode Then $iIdx = $i - 1
 	Next
 	If $s <> "" Then GUICtrlSetData($LAMMODE, StringTrimLeft($s, 1))
-	UI_LIST_WIDTH($LAMMODE, $s)
 	; che do cu bi an/xoa -> ve Daily/Evolve (mac dinh cu)
 	If $iIdx = -1 Then
 		Local $iDef = AM_FINDBUILTIN(9)
@@ -23757,7 +23696,6 @@ Func AM_FILLMAINLIST($iSelMode = 0)
 	Else
 		$AMCURMODE = 0
 	EndIf
-	UI_MODE_CAPTION()
 EndFunc
 
 ; bam chon che do tren danh sach
@@ -23767,7 +23705,6 @@ Func AM_MAINSELCLICK()
 	Local $iNew = $AMMAINIDS[$iIdx + 1]
 	If $iNew = $AMCURMODE Then Return
 	$AMCURMODE = $iNew
-	UI_MODE_CAPTION()
 	AM_APPLYMODE(True)
 EndFunc
 
@@ -24132,8 +24069,10 @@ Func AM_STOPAUTO()
 	$AMTESTING = False
 	If Not $BRUN Then Return
 	$BRUN = False
-	_GUICtrlStatusBar_SetText($SSTATUS, "Sẵn sàng", 1, 0)
-	UI_RUN_BUTTON(False)
+	_GUICtrlStatusBar_SetText($SSTATUS, @TAB & @TAB & "Ready ", 1, 0)
+	GUICtrlSetData($BSTART, "Start")
+	GUICtrlSetColor($BSTART, 0)
+	GUICtrlSetBkColor($BSTART, 65280)
 	; buoc "Dung auto" = xong che do nay -> chay lan luot thi sang che do ke
 	; (trong luc chay option "het luot" thi che do goc tu goi AM_QUEUENEXT, khong goi o day)
 	If Not $AMINFINISH Then AM_QUEUENEXT()
@@ -24207,7 +24146,6 @@ EndFunc
 
 ; che do vua xong (auto vua dung) -> co che do ke thi chay tiep. Tra ve True neu da chay tiep.
 Func AM_QUEUENEXT()
-	If $pickedWindow Or Not UI_BINDING_VALID() Then Return False
 	If Not AM_QON() Then Return False
 	Local $a = AM_QGET()
 	If $a[0] = 0 Then Return False
@@ -24230,9 +24168,11 @@ Func AM_QUEUENEXT()
 		$CNTBALL = 0
 		CUSTOM_RELOAD()
 		AdlibRegister("PROCESS_CUSTOM_CLICKS", 250)
-		_GUICtrlStatusBar_SetText($SSTATUS, "Đang chạy", 1, 0)
+		_GUICtrlStatusBar_SetText($SSTATUS, @TAB & @TAB & "Running... ", 1, 0)
 		_GUICtrlStatusBar_SetText($SSTATUS, "Lần lượt " & ($iPos + 1) & "/" & $a[0] & ": " & $sNext, 0, 0)
-		UI_RUN_BUTTON(True)
+		GUICtrlSetData($BSTART, "Stop")
+		GUICtrlSetColor($BSTART, 16777215)
+		GUICtrlSetBkColor($BSTART, 16711680)
 		Return True
 	EndIf
 	AM_LOG("Lan luot: xong '" & $sCur & "' - het danh sach, dung")
@@ -24245,32 +24185,24 @@ EndFunc
 Func AMQ_OPEN()
 	AM_ENSUREINI()
 	If $HAMQFORM <> 0 And WinExists($HAMQFORM) Then GUIDelete($HAMQFORM)
-	Local $iLB = BitOR(0x0001, 0x0100, 0x00100000, 0x00200000, 0x00800000)
-	Local $sProfile = ($STEXT = "") ? "Cấu hình mặc định" : "Giả lập  ·  " & $STEXT
-	$HAMQFORM = GUICreate("Hàng đợi chế độ", 700, 476)
+	Local $iLB = BitOR(0x0001, 0x0100, 0x00200000, 0x00800000)
+	$HAMQFORM = GUICreate("Chạy lần lượt - " & AM_QKEY(), 530, 360)
 	GUISetOnEvent($GUI_EVENT_CLOSE, "AMQ_CLOSE", $HAMQFORM)
-	GUISetFont(9, 400, 0, "Segoe UI", $HAMQFORM)
-	GUISetBkColor($UI_BG, $HAMQFORM)
-	UI_HEADER("Hàng đợi chế độ", $sProfile, 700)
-
-	$AMQCHK = GUICtrlCreateCheckbox("Bật chạy lần lượt", 20, 80, 268, 26)
-	GUICtrlSetState($AMQCHK, AM_QON() ? $GUI_CHECKED : $GUI_UNCHECKED)
-	GUICtrlSetOnEvent($AMQCHK, "AMQ_ONCHK")
-
-	UI_TITLE("Chế độ có sẵn", 20, 119, 260)
-	$AMQLALL = GUICtrlCreateList("", 20, 146, 264, 188, $iLB)
-	UI_TITLE("Thứ tự chạy", 416, 119, 264)
-	$AMQLQ = GUICtrlCreateList("", 416, 146, 264, 188, $iLB)
-
-	UI_BUTTON("Thêm →", 296, 151, 108, 33, "AMQ_ADD", True)
-	UI_BUTTON("← Bỏ", 296, 190, 108, 33, "AMQ_DEL")
-	UI_BUTTON("Đưa lên", 296, 249, 108, 33, "AMQ_UP")
-	UI_BUTTON("Đưa xuống", 296, 288, 108, 33, "AMQ_DOWN")
-
-	UI_TITLE("Khi nào chuyển chế độ?", 20, 348, 420)
-	GUICtrlCreateLabel("Story, Daily/Evolve và World Challenge tự báo hoàn tất. Với Events, Raid hoặc League, hãy đặt chế độ ở cuối hàng đợi hoặc thêm bước “Dừng auto” khi hết lượt.", 20, 375, 660, 38)
-	GUICtrlSetColor(-1, $UI_MUTED)
-	UI_BUTTON("Đóng", 580, 428, 100, 32, "AMQ_CLOSE")
+	$AMQCHK = GUICtrlCreateCheckbox("Bật chạy lần lượt cho MEmu này: " & AM_QKEY(), 10, 10, 510, 20)
+	GUICtrlSetState(-1, AM_QON() ? $GUI_CHECKED : $GUI_UNCHECKED)
+	GUICtrlSetOnEvent(-1, "AMQ_ONCHK")
+	GUICtrlCreateLabel("Các chế độ:", 10, 40, 200, 17)
+	$AMQLALL = GUICtrlCreateList("", 10, 58, 200, 200, $iLB)
+	GUICtrlCreateLabel("Thứ tự chạy:", 320, 40, 200, 17)
+	$AMQLQ = GUICtrlCreateList("", 320, 58, 200, 200, $iLB)
+	AMED_BTN("Thêm →", 220, 90, 90, 28, "AMQ_ADD")
+	AMED_BTN("← Bỏ", 220, 125, 90, 28, "AMQ_DEL")
+	AMED_BTN("Lên", 220, 170, 90, 28, "AMQ_UP")
+	AMED_BTN("Xuống", 220, 205, 90, 28, "AMQ_DOWN")
+	GUICtrlCreateLabel("Chế độ tự biết khi nào xong: Story, Daily/Evolve, World Challenge, và chế độ có bước 'Dừng auto'. " & _
+		"Chế độ khác (Events, Raid, League...) không tự xong -> để cuối, hoặc thêm option có bước 'Dừng auto' khi hết lượt.", 10, 268, 510, 45)
+	GUICtrlSetColor(-1, 0x606060)
+	AMED_BTN("Đóng", 420, 322, 100, 28, "AMQ_CLOSE")
 	AMQ_FILL(0)
 	GUISetState(@SW_SHOW, $HAMQFORM)
 EndFunc
@@ -24361,99 +24293,106 @@ Func AMED_OPEN()
 		WinActivate($HAMFORM)
 		Return
 	EndIf
-	; Preserve list order because selection and move operations use list indices.
+	; LBS_NOTIFY | LBS_NOINTEGRALHEIGHT | WS_HSCROLL | WS_VSCROLL | WS_BORDER (khong sort)
 	Local $iLB = BitOR(0x0001, 0x0100, 0x00100000, 0x00200000, 0x00800000)
-	$HAMFORM = GUICreate("Trình sửa chế độ", 980, 640)
+	$HAMFORM = GUICreate("Mode Editor - auto_modes.ini", 900, 580)
 	GUISetOnEvent($GUI_EVENT_CLOSE, "AMED_CLOSE", $HAMFORM)
-	GUISetFont(9, 400, 0, "Segoe UI", $HAMFORM)
-	GUISetBkColor($UI_BG, $HAMFORM)
-	UI_HEADER("Trình sửa chế độ", "Các thay đổi tự lưu vào auto_modes.ini. Ứng dụng tự nạp lại khi đang chạy.", 980)
 
-	UI_TITLE("Chế độ", 20, 82, 220)
-	$AMLMODE = GUICtrlCreateList("", 20, 111, 217, 145, $iLB)
-	GUICtrlSetOnEvent($AMLMODE, "AMED_ONMODE")
-	UI_BUTTON("Thêm", 20, 265, 67, 29, "AMED_MODEADD")
-	UI_BUTTON("Đổi tên", 93, 265, 68, 29, "AMED_MODERENAME")
-	UI_BUTTON("Ẩn / hiện", 167, 265, 70, 29, "AMED_MODEHIDE")
-	UI_BUTTON("Lên", 20, 300, 67, 29, "AMED_MODEUP")
-	UI_BUTTON("Xuống", 93, 300, 68, 29, "AMED_MODEDOWN")
-	UI_BUTTON("Xóa", 167, 300, 70, 29, "AMED_MODEDEL")
-	$AMLMODEINFO = GUICtrlCreateLabel("", 20, 347, 217, 246)
-	GUICtrlSetColor($AMLMODEINFO, $UI_MUTED)
+	; ---- cot 1: che do ----
+	GUICtrlCreateLabel("1. Chế độ", 10, 10, 210, 17)
+	GUICtrlSetFont(-1, 9, 700)
+	$AMLMODE = GUICtrlCreateList("", 10, 30, 210, 200, $iLB)
+	GUICtrlSetOnEvent(-1, "AMED_ONMODE")
+	AMED_BTN("Thêm", 10, 235, 65, 25, "AMED_MODEADD")
+	AMED_BTN("Đổi tên", 80, 235, 70, 25, "AMED_MODERENAME")
+	AMED_BTN("Ẩn / Hiện", 155, 235, 65, 25, "AMED_MODEHIDE")
+	AMED_BTN("Lên", 10, 264, 65, 25, "AMED_MODEUP")
+	AMED_BTN("Xuống", 80, 264, 70, 25, "AMED_MODEDOWN")
+	AMED_BTN("Xoá", 155, 264, 65, 25, "AMED_MODEDEL")
+	$AMLMODEINFO = GUICtrlCreateLabel("", 10, 298, 210, 120)
 
-	UI_TITLE("Tùy chọn", 258, 82, 240)
-	$AMLOPT = GUICtrlCreateList("", 258, 111, 236, 145, $iLB)
-	GUICtrlSetOnEvent($AMLOPT, "AMED_ONOPT")
-	UI_BUTTON("Thêm", 258, 265, 74, 29, "AMED_OPTADD")
-	UI_BUTTON("Đổi tên", 339, 265, 74, 29, "AMED_OPTRENAME")
-	UI_BUTTON("Xóa", 420, 265, 74, 29, "AMED_OPTDEL")
-	$AMCHKEN = GUICtrlCreateCheckbox("Bật tùy chọn này", 258, 302, 236, 24)
-	GUICtrlSetOnEvent($AMCHKEN, "AMED_OPTPROP")
-	GUICtrlCreateLabel("Kiểu chạy", 258, 333, 236, 18)
-	$AMCTYPE = GUICtrlCreateCombo("", 258, 354, 236, 25, 3)
-	GUICtrlSetData($AMCTYPE, "Luôn quét khi chạy chế độ này|Khi chế độ gốc hết lượt")
-	GUICtrlSetOnEvent($AMCTYPE, "AMED_OPTPROP")
-	$AMCHKHOME = GUICtrlCreateCheckbox("Về màn hình chính trước khi chạy", 258, 385, 236, 23)
-	GUICtrlSetOnEvent($AMCHKHOME, "AMED_OPTPROP")
-	$AMCHKBLOCK = GUICtrlCreateCheckbox("Tạm dừng click tùy chỉnh khi chạy", 258, 409, 236, 23)
-	GUICtrlSetOnEvent($AMCHKBLOCK, "AMED_OPTPROP")
-	GUICtrlCreateLabel("Bước khớp màu sẽ chạy. Với kiểu “hết lượt”, bước “Click rồi xong” kết thúc tùy chọn.", 258, 438, 236, 48)
-	GUICtrlSetColor(-1, $UI_MUTED)
-
-	UI_TITLE("Chạy thử", 258, 494, 236)
-	GUICtrlCreateLabel("Từ bước", 258, 526, 54, 20)
-	$AMITESTFROM = GUICtrlCreateInput("", 313, 522, 48, 25, 0x2000)
-	GUICtrlCreateLabel("Đến bước", 370, 526, 61, 20)
-	$AMITESTTO = GUICtrlCreateInput("", 436, 522, 58, 25, 0x2000)
-	GUICtrlCreateLabel("Để trống để chạy từ đầu đến cuối.", 258, 552, 236, 19)
-	GUICtrlSetColor(-1, $UI_MUTED)
-	$AMBTESTRUN = UI_BUTTON("Chạy thử", 258, 577, 112, 32, "AMED_TESTRUN")
-	; WM_COMMAND handles Stop even while an OnEvent callback is executing.
-	$AMBSTOPTEST = GUICtrlCreateButton("Dừng (Esc)", 378, 577, 116, 32)
-	GUICtrlSetState($AMBSTOPTEST, $GUI_DISABLE)
+	; ---- cot 2: option ----
+	GUICtrlCreateLabel("2. Option của chế độ", 235, 10, 220, 17)
+	GUICtrlSetFont(-1, 9, 700)
+	$AMLOPT = GUICtrlCreateList("", 235, 30, 220, 200, $iLB)
+	GUICtrlSetOnEvent(-1, "AMED_ONOPT")
+	AMED_BTN("Thêm", 235, 235, 70, 25, "AMED_OPTADD")
+	AMED_BTN("Đổi tên", 310, 235, 70, 25, "AMED_OPTRENAME")
+	AMED_BTN("Xoá", 385, 235, 70, 25, "AMED_OPTDEL")
+	$AMCHKEN = GUICtrlCreateCheckbox("Bật option này", 235, 268, 220, 20)
+	GUICtrlSetOnEvent(-1, "AMED_OPTPROP")
+	GUICtrlCreateLabel("Kiểu chạy:", 235, 294, 220, 17)
+	$AMCTYPE = GUICtrlCreateCombo("", 235, 312, 220, 25, 3)        ; CBS_DROPDOWNLIST
+	GUICtrlSetData(-1, "Luôn quét khi chạy chế độ này|Khi chế độ gốc hết lượt")
+	GUICtrlSetOnEvent(-1, "AMED_OPTPROP")
+	$AMCHKHOME = GUICtrlCreateCheckbox("Về màn hình chính trước khi chạy", 235, 342, 220, 20)
+	GUICtrlSetOnEvent(-1, "AMED_OPTPROP")
+	$AMCHKBLOCK = GUICtrlCreateCheckbox("Tạm dừng Custom Click khi chạy", 235, 364, 220, 20)
+	GUICtrlSetOnEvent(-1, "AMED_OPTPROP")
+	GUICtrlCreateLabel("Quét liên tục như Custom Click: bước nào khớp màu thì làm. Kiểu 'hết lượt' kết thúc khi gặp bước 'Click rồi xong'.", 235, 390, 220, 45)
+	GUICtrlSetColor(-1, 0x808080)
+	$AMBTESTRUN = AMED_BTN("Chạy thử option", 235, 438, 125, 28, "AMED_TESTRUN")
+	; nut Dung xu ly qua WM_COMMAND (AM_WMCOMMAND) de an NGAY ca khi dang chay thu
+	$AMBSTOPTEST = GUICtrlCreateButton("Dừng (ESC)", 365, 438, 90, 28)
+	GUICtrlSetState(-1, $GUI_DISABLE)
+	; chay thu mot doan: tu buoc .. den buoc .. (bam chon buoc o cot 3 thi tu dien o "tu")
+	GUICtrlCreateLabel("Chạy thử từ bước", 235, 475, 90, 17)
+	$AMITESTFROM = GUICtrlCreateInput("", 327, 472, 35, 21, 0x2000)
+	GUICtrlCreateLabel("đến bước", 368, 475, 50, 17)
+	$AMITESTTO = GUICtrlCreateInput("", 420, 472, 35, 21, 0x2000)
+	GUICtrlCreateLabel("(để trống = từ đầu / tới hết)", 235, 497, 220, 17)
+	GUICtrlSetColor(-1, 0x808080)
 	If Not $AMMSGREG Then
-		GUIRegisterMsg(0x0111, "AM_WMCOMMAND")
+		GUIRegisterMsg(0x0111, "AM_WMCOMMAND")          ; WM_COMMAND
 		$AMMSGREG = True
 	EndIf
 
-	UI_TITLE("Các bước thực hiện", 516, 82, 444)
-	$AMLSTEP = GUICtrlCreateList("", 516, 111, 444, 145, $iLB)
-	GUICtrlSetOnEvent($AMLSTEP, "AMED_ONSTEP")
-	UI_BUTTON("Lên", 516, 265, 66, 29, "AMED_STEPUP")
-	UI_BUTTON("Xuống", 589, 265, 66, 29, "AMED_STEPDOWN")
-	UI_BUTTON("Xóa bước", 662, 265, 87, 29, "AMED_STEPDEL")
-	UI_BUTTON("Nhập bước mới", 820, 265, 140, 29, "AMED_STEPNEW")
+	; ---- cot 3: cac buoc ----
+	GUICtrlCreateLabel("3. Các bước", 470, 10, 420, 17)
+	GUICtrlSetFont(-1, 9, 700)
+	$AMLSTEP = GUICtrlCreateList("", 470, 30, 420, 200, $iLB)
+	GUICtrlSetOnEvent(-1, "AMED_ONSTEP")
+	GUICtrlSendMsg($AMLSTEP, 0x194, 1600, 0)                          ; LB_SETHORIZONTALEXTENT
+	AMED_BTN("Lên", 470, 235, 60, 25, "AMED_STEPUP")
+	AMED_BTN("Xuống", 535, 235, 60, 25, "AMED_STEPDOWN")
+	AMED_BTN("Xoá bước", 600, 235, 80, 25, "AMED_STEPDEL")
+	AMED_BTN("Bước mới (xoá ô nhập)", 690, 235, 135, 25, "AMED_STEPNEW")
 
-	GUICtrlCreateLabel("Điểm màu 1", 516, 314, 86, 22)
-	$AMIP1 = GUICtrlCreateInput("", 607, 310, 262, 25)
-	UI_BUTTON("Chọn", 878, 309, 82, 27, "AMED_PICK1")
-	GUICtrlCreateLabel("Điểm màu 2", 516, 345, 86, 22)
-	$AMIP2 = GUICtrlCreateInput("", 607, 341, 262, 25)
-	UI_BUTTON("Chọn", 878, 340, 82, 27, "AMED_PICK2")
-	GUICtrlCreateLabel("Điểm màu 3", 516, 376, 86, 22)
-	$AMIP3 = GUICtrlCreateInput("", 607, 372, 262, 25)
-	UI_BUTTON("Chọn", 878, 371, 82, 27, "AMED_PICK3")
-	GUICtrlCreateLabel("Hành động", 516, 415, 86, 22)
-	$AMCACT = GUICtrlCreateCombo("", 607, 411, 171, 25, 3)
-	GUICtrlSetData($AMCACT, "Click vào điểm|Click rồi xong|Về màn hình chính|Dừng auto|Đây là màn hình chính")
-	GUICtrlSendMsg($AMCACT, 0x14E, 0, 0)
-	$AMICLICK = GUICtrlCreateInput("", 786, 411, 83, 25)
-	GUICtrlSetTip($AMICLICK, "Tọa độ click (x,y)")
-	UI_BUTTON("Chọn", 878, 410, 82, 27, "AMED_PICKCLICK")
-	GUICtrlCreateLabel("Ghi chú", 516, 449, 86, 22)
-	$AMINOTE = GUICtrlCreateInput("", 607, 445, 353, 25)
-	UI_BUTTON("Kiểm tra màu", 516, 482, 123, 32, "AMED_TESTCOND")
-	UI_BUTTON("Thêm bước", 696, 482, 119, 32, "AMED_STEPADD", True)
-	UI_BUTTON("Cập nhật bước", 822, 482, 138, 32, "AMED_STEPUPDATE")
-	$AMLBLINFO = GUICtrlCreateLabel("", 516, 526, 444, 68)
-	GUICtrlSetColor($AMLBLINFO, $UI_TEAL)
-	UI_BUTTON("Đóng", 864, 598, 96, 32, "AMED_CLOSE")
+	GUICtrlCreateLabel("Điểm màu 1:", 470, 273, 68, 17)
+	$AMIP1 = GUICtrlCreateInput("", 540, 270, 225, 21)
+	AMED_BTN("Chọn", 770, 268, 55, 25, "AMED_PICK1")
+	GUICtrlCreateLabel("Điểm màu 2:", 470, 300, 68, 17)
+	$AMIP2 = GUICtrlCreateInput("", 540, 297, 225, 21)
+	AMED_BTN("Chọn", 770, 295, 55, 25, "AMED_PICK2")
+	GUICtrlCreateLabel("Điểm màu 3:", 470, 327, 68, 17)
+	$AMIP3 = GUICtrlCreateInput("", 540, 324, 225, 21)
+	AMED_BTN("Chọn", 770, 322, 55, 25, "AMED_PICK3")
+	GUICtrlCreateLabel("Hành động:", 470, 357, 68, 17)
+	$AMCACT = GUICtrlCreateCombo("", 540, 354, 150, 25, 3)
+	GUICtrlSetData(-1, "Click vào điểm|Click rồi xong (kết thúc)|Về màn hình chính|Dừng auto|Đây là màn hình chính")
+	GUICtrlSendMsg(-1, 0x14E, 0, 0)                                   ; CB_SETCURSEL
+	$AMICLICK = GUICtrlCreateInput("", 695, 354, 70, 21)
+	AMED_BTN("Chọn", 770, 352, 55, 25, "AMED_PICKCLICK")
+	GUICtrlCreateLabel("Ghi chú:", 470, 386, 68, 17)
+	$AMINOTE = GUICtrlCreateInput("", 540, 383, 285, 21)
+	AMED_BTN("Kiểm tra màu", 470, 414, 110, 28, "AMED_TESTCOND")
+	AMED_BTN("Thêm bước", 585, 414, 110, 28, "AMED_STEPADD")
+	AMED_BTN("Cập nhật bước", 700, 414, 125, 28, "AMED_STEPUPDATE")
+	$AMLBLINFO = GUICtrlCreateLabel("", 470, 450, 420, 90)
+	GUICtrlSetColor(-1, 0x0000C0)
+
+	GUICtrlCreateLabel("Lưu trong auto_modes.ini (cạnh file Auto) - tự lưu mỗi khi sửa, Auto đang chạy tự nạp lại.", 10, 553, 700, 17)
+	AMED_BTN("Đóng", 790, 545, 100, 28, "AMED_CLOSE")
 
 	AMED_FILLMODES($AMCURMODE)
 	GUISetState(@SW_SHOW, $HAMFORM)
 EndFunc
 
-
+Func AMED_BTN($sText, $x, $y, $w, $h, $sFunc)
+	Local $id = GUICtrlCreateButton($sText, $x, $y, $w, $h)
+	GUICtrlSetOnEvent($id, $sFunc)
+	Return $id
+EndFunc
 
 Func AMED_CLOSE()
 	If $HAMFORM <> 0 Then
@@ -24475,19 +24414,18 @@ Func AMED_CLEAN($s)
 EndFunc
 
 Func AMED_ASK($sPrompt, $sDef)
-	Local $s = InputBox("Trình sửa chế độ", $sPrompt, $sDef, "", 340, 140, Default, Default, 0, $HAMFORM)
+	Local $s = InputBox("Mode Editor", $sPrompt, $sDef, "", 340, 140, Default, Default, 0, $HAMFORM)
 	If @error Then Return ""
 	Return AMED_CLEAN($s)
 EndFunc
 
 Func AMED_CONFIRM($sMsg)
-	Return (MsgBox(4 + 32 + 262144, "Trình sửa chế độ", $sMsg, 0, $HAMFORM) = 6)
+	Return (MsgBox(4 + 32 + 262144, "Mode Editor", $sMsg, 0, $HAMFORM) = 6)
 EndFunc
 
 Func AMED_LISTSET($idList, $s, $iIdx)
 	GUICtrlSendMsg($idList, 0x184, 0, 0)                  ; LB_RESETCONTENT
 	If $s <> "" Then GUICtrlSetData($idList, StringTrimLeft($s, 1))
-	UI_LIST_WIDTH($idList, $s)
 	If $iIdx >= 0 Then GUICtrlSendMsg($idList, 0x186, $iIdx, 0)
 EndFunc
 
@@ -24515,11 +24453,11 @@ Func AMED_ONMODE()
 	If $AMSELMODE <> 0 Then
 		Local $iB = Number(IniRead($SAMINI, "M" & $AMSELMODE, "Builtin", "0"))
 		If $iB < 0 Then
-			$sInfo = "Các quy tắc về màn hình chính chạy cùng mọi chế độ." & @CRLF & "Khi chọn nút Home hoặc Back, hãy thêm một điểm màu riêng của màn hình, chẳng hạn màu tiêu đề." & @CRLF & "Với “Đây là màn hình chính”, hãy chọn điểm màu chỉ có trên màn hình chính."
+			$sInfo = "Dùng cho mọi chỗ 'Về màn hình chính' + chạy kèm MỌI chế độ (đang lạc ở shop... thì tự bấm về)." & @CRLF & "- Click nút Home/Back: nhớ chọn 1 điểm màu RIÊNG của màn hình đó (vd tiêu đề), đừng chỉ chọn trên nút Home." & @CRLF & "- 'Đây là màn hình chính': điểm màu chỉ có ở màn hình chính."
 		ElseIf $iB > 0 And $iB <= 9 Then
-			$sInfo = "Chế độ gốc (" & $AMBASENAMES[$iB] & ") chạy cùng các tùy chọn đã bật." & @CRLF & @CRLF & "Bạn có thể ẩn chế độ gốc khỏi danh sách."
+			$sInfo = "Chế độ gốc (" & $AMBASENAMES[$iB] & "): code có sẵn vẫn chạy, các option ở cột 2 chạy kèm." & @CRLF & @CRLF & "Không xoá được, chỉ Ẩn."
 		Else
-			$sInfo = "Chế độ tự tạo chạy các tùy chọn đã bật." & @CRLF & @CRLF & "Dùng kiểu “Luôn quét” cho chế độ này. Thêm bước “Dừng auto” để kết thúc."
+			$sInfo = "Chế độ tự tạo: chỉ chạy các option ở cột 2." & @CRLF & @CRLF & "Kiểu 'Khi chế độ gốc hết lượt' không dùng cho chế độ này - muốn dừng thì thêm bước 'Dừng auto'."
 		EndIf
 	EndIf
 	GUICtrlSetData($AMLMODEINFO, $sInfo)
@@ -24560,7 +24498,7 @@ Func AMED_MODEHIDE()
 	Else
 		Local $aV = AM_MODES(True)
 		If $aV[0] <= 1 Then
-			AMED_INFO("Cần giữ ít nhất một chế độ hiển thị trong danh sách.")
+			AMED_INFO("Phải còn ít nhất 1 chế độ hiện trên danh sách.")
 			Return
 		EndIf
 		IniWrite($SAMINI, $sSec, "Hidden", "1")
@@ -24597,10 +24535,10 @@ EndFunc
 Func AMED_MODEDEL()
 	If $AMSELMODE = 0 Then Return
 	If Number(IniRead($SAMINI, "M" & $AMSELMODE, "Builtin", "0")) <> 0 Then
-		AMED_INFO("Bạn có thể dùng nút Ẩn / hiện cho chế độ gốc này.")
+		AMED_INFO("Chế độ gốc không xoá được - dùng nút Ẩn / Hiện.")
 		Return
 	EndIf
-	If Not AMED_CONFIRM("Xoá chế độ '" & IniRead($SAMINI, "M" & $AMSELMODE, "Name", "") & "' và toàn bộ tùy chọn đi kèm?") Then Return
+	If Not AMED_CONFIRM("Xoá chế độ '" & IniRead($SAMINI, "M" & $AMSELMODE, "Name", "") & "' và toàn bộ option của nó?") Then Return
 	Local $aO = AM_IDS("O", "Mode", String($AMSELMODE))
 	For $i = 1 To $aO[0]
 		IniDelete($SAMINI, "O" & $aO[$i])
@@ -24664,7 +24602,7 @@ EndFunc
 
 Func AMED_OPTADD()
 	If $AMSELMODE = 0 Then Return
-	Local $s = AMED_ASK("Tên tùy chọn mới:", "")
+	Local $s = AMED_ASK("Tên option mới:", "")
 	If $s = "" Then Return
 	Local $id = AM_NEWID("O")
 	IniWriteSection($SAMINI, "O" & $id, "Mode=" & $AMSELMODE & @LF & "Name=" & $s & @LF & "Enabled=1" & @LF & _
@@ -24684,7 +24622,7 @@ EndFunc
 
 Func AMED_OPTDEL()
 	If $AMSELOPT = 0 Then Return
-	If Not AMED_CONFIRM("Xóa tùy chọn '" & IniRead($SAMINI, "O" & $AMSELOPT, "Name", "") & "' và các bước của nó?") Then Return
+	If Not AMED_CONFIRM("Xoá option '" & IniRead($SAMINI, "O" & $AMSELOPT, "Name", "") & "' và các bước của nó?") Then Return
 	IniDelete($SAMINI, "O" & $AMSELOPT)
 	AMED_TOUCH()
 	AMED_FILLOPTS()
@@ -24797,7 +24735,7 @@ EndFunc
 
 Func AMED_STEPADD()
 	If $AMSELOPT = 0 Then
-		AMED_INFO("Chọn hoặc thêm một tùy chọn trước khi thêm bước.")
+		AMED_INFO("Chọn (hoặc thêm) 1 option ở cột 2 trước.")
 		Return
 	EndIf
 	Local $s = AMED_READSTEP()
@@ -24907,7 +24845,7 @@ EndFunc
 
 Func AMED_HAVEWIN()
 	If $HWND = "" Or $HWND = 0 Or Not WinExists($HWND) Then
-		AMED_INFO("Hãy gán cửa sổ trò chơi trong bảng điều khiển trước.")
+		AMED_INFO("Chưa gán cửa sổ game - bấm Assign Window trước.")
 		Return False
 	EndIf
 	$APOS = WinGetPos($HWND)
@@ -24943,13 +24881,13 @@ Func AMED_TESTRUN()
 	If $AMTESTEND <> 0 And TimerDiff($AMTESTEND) < 1000 Then Return
 	If $AMSELOPT = 0 Then Return
 	If $BRUN Then
-		AMED_INFO("Hãy dừng tự động trong bảng điều khiển trước khi chạy thử.")
+		AMED_INFO("Auto đang chạy - bấm Stop rồi mới chạy thử.")
 		Return
 	EndIf
 	If Not AMED_HAVEWIN() Then Return
 	Local $aS = AM_GETSTEPS($AMSELOPT)
 	If $aS[0] = 0 Then
-		AMED_INFO("Tùy chọn này chưa có bước nào.")
+		AMED_INFO("Option này chưa có bước nào.")
 		Return
 	EndIf
 	Local $sSec = "O" & $AMSELOPT
@@ -24995,70 +24933,34 @@ EndFunc
 ;  Stale entries (dead PIDs) are ignored and cleaned up automatically.
 ; =============================================================================
 
-Func DOCK_TO_GAME($a = Default)
-	If Not $HWND Or Not WinExists($HWND) Then Return
-	Local $state = WinGetState($HWND)
-	If BitAND($state, 16) Or Not BitAND($state, 2) Or BitAND(WinGetState($MAINFORM), 16) Then Return
-	If Not IsArray($a) Then $a = WinGetPos($HWND)
+Func DOCK_TO_GAME()
+	If $HWND = "" Or $HWND = 0 Then Return
+	If Not WinExists($HWND) Then Return
+	Local $a = WinGetPos($HWND)
 	If Not IsArray($a) Then Return
 	$APOS = $a
 	Local $m = WinGetPos($MAINFORM)
 	If Not IsArray($m) Then Return
-	; Use the emulator's work area, including monitors left of the primary screen.
-	Local $left = 0, $top = 0, $right = @DesktopWidth, $bottom = @DesktopHeight
-	Local $monitor = _WinAPI_GetMonitorInfo(_WinAPI_MonitorFromWindow($HWND, $MONITOR_DEFAULTTONEAREST))
-	If IsArray($monitor) Then
-		$left = DllStructGetData($monitor[1], "Left")
-		$top = DllStructGetData($monitor[1], "Top")
-		$right = DllStructGetData($monitor[1], "Right")
-		$bottom = DllStructGetData($monitor[1], "Bottom")
-	EndIf
-	Local $nx = $a[0], $ny = $a[1] + $a[3]
-	If $ny + $m[3] > $bottom Then
-		Select
-			Case $a[1] - $m[3] >= $top
-				$ny = $a[1] - $m[3]
-			Case $a[0] + $a[2] + $m[2] <= $right
-				$nx = $a[0] + $a[2]
-				$ny = $a[1]
-			Case $a[0] - $m[2] >= $left
-				$nx = $a[0] - $m[2]
-				$ny = $a[1]
-			Case $a[1] - $top > $bottom - $ny
-				$ny = $a[1] - $m[3]
-		EndSelect
-	EndIf
-	If $nx + $m[2] > $right Then $nx = $right - $m[2]
-	If $ny + $m[3] > $bottom Then $ny = $bottom - $m[3]
-	If $nx < $left Then $nx = $left
-	If $ny < $top Then $ny = $top
-	If $m[0] <> $nx Or $m[1] <> $ny Then _WinAPI_SetWindowPos($MAINFORM, 0, $nx, $ny, 0, 0, BitOR($SWP_NOACTIVATE, $SWP_NOZORDER, $SWP_NOSIZE))
-	If $uiDockWindow <> $HWND And $BCOLLAPSED Then UI_STATUS_LAYOUT()
-	$uiDockWindow = $HWND
-	$uiDockRect = $a
+	; bottom-left corner of the emulator window
+	Local $nx = $a[0]
+	Local $ny = $a[1] + $a[3]
+	; keep it on screen
+	If $ny + $m[3] > @DesktopHeight Then $ny = $a[1] - $m[3]
+	If $ny < 0 Then $ny = 0
+	If $nx < 0 Then $nx = 0
+	If $nx + $m[2] > @DesktopWidth Then $nx = @DesktopWidth - $m[2]
+	If $m[0] <> $nx Or $m[1] <> $ny Then WinMove($MAINFORM, "", $nx, $ny)
 EndFunc
 
 ; ---------------------------------------------------------------------------
 ;  Claim bookkeeping so several Auto instances never grab the same emulator
 ; ---------------------------------------------------------------------------
 Func CLAIM_WINDOW($hW)
-    ; The kernel claim closes the gap between checking the INI and assigning the window.
-    Local $mutex = DllCall("kernel32.dll", "handle", "CreateMutexW", "ptr", 0, "bool", False, "wstr", "Local\CTDT_Auto_Window_" & String($hW))
-    Local $apiError = @error, $lastError = _WinAPI_GetLastError()
-    If $apiError Or Not IsArray($mutex) Or Not $mutex[0] Then Return 0
-    If $lastError = 183 Or IS_CLAIMED_BY_OTHER($hW) Then
-        _WinAPI_CloseHandle($mutex[0])
-        Return 0
-    EndIf
-    Return $mutex[0]
+	IniWrite($SASSIGNINI, "Assigned", String(@AutoItPID), String($hW))
 EndFunc
 
 Func RELEASE_WINDOW()
-    If $claimMutex Then
-        IniDelete($SASSIGNINI, "Assigned", String(@AutoItPID))
-        _WinAPI_CloseHandle($claimMutex)
-        $claimMutex = 0
-    EndIf
+	IniDelete($SASSIGNINI, "Assigned", String(@AutoItPID))
 EndFunc
 
 Func IS_CLAIMED_BY_OTHER($hW)
@@ -25079,116 +24981,88 @@ EndFunc
 ; ---------------------------------------------------------------------------
 ;  Is this window an Android emulator we can drive?
 ; ---------------------------------------------------------------------------
-Func IS_EMULATOR_WINDOW($hW, $sTitle, ByRef $processes)
-    If $sTitle = "" Or Not BitAND(WinGetState($hW), 2) Then Return False
-    If _WinAPI_GetWindow($hW, $GW_OWNER) Then Return False
-    Local $pid = WinGetProcess($hW)
-    For $i = 1 To $processes[0][0]
-        If $processes[$i][1] <> $pid Then ContinueLoop
-        Switch StringLower($processes[$i][0])
-            Case "memu.exe", "memuheadless.exe", "nox.exe", "noxvmhandle.exe", "dnplayer.exe", "ldplayer.exe"
-                Local $pos = WinGetPos($hW)
-                Return IsArray($pos) And $pos[2] >= 600 And $pos[3] >= 300
-        EndSwitch
-        ExitLoop
-    Next
-    Return False
+Func IS_EMULATOR_WINDOW($hW, $sTitle, $sClass)
+	Local $a = WinGetPos($hW)
+	If Not IsArray($a) Then Return False
+	If $a[2] < 600 Or $a[3] < 300 Then Return False           ; too small, skip toolbars
+	If Not BitAND(WinGetState($hW), 2) Then Return False      ; not visible
+
+	; never grab another Auto window
+	If StringInStr($sTitle, "CTDT Auto") Then Return False
+
+	; 1. by process name - most reliable, independent of the instance name
+	Local $iPid = WinGetProcess($hW)
+	If $iPid > 0 Then
+		Local $sProc = ""
+		Local $aP = ProcessList()
+		For $i = 1 To $aP[0][0]
+			If $aP[$i][1] = $iPid Then
+				$sProc = StringLower($aP[$i][0])
+				ExitLoop
+			EndIf
+		Next
+		; memuconsole.exe = Multiple Instance Manager, khong phai cua so game -> khong dua vao
+		If $sProc = "memu.exe" Or $sProc = "memuheadless.exe" _
+		   Or $sProc = "nox.exe" Or $sProc = "noxvmhandle.exe" _
+		   Or $sProc = "dnplayer.exe" Or $sProc = "ldplayer.exe" Then Return True
+		; Biet ten process ma khong phai gia lap (Telegram, OBS... cung la app Qt) -> bo qua,
+		; khong xet tiep theo class/title de tranh gan nham.
+		If $sProc <> "" Then Return False
+	EndIf
+
+	; Chi toi day khi KHONG lay duoc ten process
+	; 2. by window class - Qt renderer used by MEmu / Nox
+	If StringInStr($sClass, "Qt") And StringInStr($sClass, "QWindowIcon") Then Return True
+
+	; 3. by title keyword - last resort
+	If StringInStr($sTitle, "MEmu") Or StringInStr($sTitle, "Nox") _
+	   Or StringInStr($sTitle, "LDPlayer") Then Return True
+
+	Return False
 EndFunc
 
 ; ---------------------------------------------------------------------------
 ;  Find a free emulator window and assign it. Returns True on success.
 ; ---------------------------------------------------------------------------
-Func UI_BINDING_VALID()
-    Return $HWND <> 0 And $boundPid > 0 And WinExists($HWND) And WinGetProcess($HWND) = $boundPid
-EndFunc
-
-Func UI_BIND_LOST()
-    If Not $HWND Then Return
-    $uiBindingBusy = True
-    $resumeOnBind = $BRUN
-    $BRUN = False
-    $AMTESTING = False
-    AdlibUnRegister("PROCESS_CUSTOM_CLICKS")
-    ; Keep the last geometry available to operations that are returning from Sleep.
-    $HWND = 0
-    $boundPid = 0
-    $IMEMUIDX = -1
-    $HMEMUIDXWIN = 0
-    $SMEMUC = ""
-    RELEASE_WINDOW()
-    UI_RUN_BUTTON(False)
-    WinSetTitle($MAINFORM, "", "CTDT Auto")
-    _GUICtrlStatusBar_SetText($SSTATUS, "Đang chờ giả lập · " & $boundTitle, 0)
-    _GUICtrlStatusBar_SetText($SSTATUS, "Mất kết nối", 1)
-    $uiBindingBusy = False
-EndFunc
-
-Func UI_ATTACH_WINDOW($hW, $title, $autoStart)
-    If UI_BINDING_VALID() And $hW = $HWND Then Return True
-    Local $pid = WinGetProcess($hW), $pos = WinGetPos($hW)
-    If $pid < 1 Or Not IsArray($pos) Then Return False
-    Local $mutex = CLAIM_WINDOW($hW)
-    If Not $mutex Then Return False
-    If Not WinExists($hW) Or WinGetProcess($hW) <> $pid Then
-        _WinAPI_CloseHandle($mutex)
-        Return False
-    EndIf
-    $uiBindingBusy = True
-    RELEASE_WINDOW()
-    $claimMutex = $mutex
-    $boundPid = $pid
-    $boundTitle = $title
-    $STEXT = $title
-    $SINITEXT = $title
-    $APOS = $pos
-    $SMEMUC = ""
-    $IMEMUIDX = -1
-    $HMEMUIDXWIN = 0
-    $HWND = $hW
-    IniWrite($SASSIGNINI, "Assigned", String(@AutoItPID), String($hW))
-    If Not VD_SAMEDESKTOP($MAINFORM, $hW) Then VD_MOVETOWINDOW($MAINFORM, $hW)
-    WinSetTitle($MAINFORM, "", "CTDT Auto - " & $title)
-    _GUICtrlStatusBar_SetText($SSTATUS, "Giả lập · " & $title, 0)
-    _GUICtrlStatusBar_SetText($SSTATUS, "Sẵn sàng", 1)
-    DOCK_TO_GAME()
-    $uiBindingBusy = False
-    If $autoStart Then AUTO_START_IF_IDLE()
-    Return True
-EndFunc
-
-Func UI_REFRESH_BINDING()
-    If $uiBindingBusy Then Return
-    If $HWND And Not UI_BINDING_VALID() Then UI_BIND_LOST()
-    If $pickedWindow Then
-        Local $picked = $pickedWindow
-        $pickedWindow = 0
-        If WinExists($picked) And WinGetProcess($picked) = $pickedPid Then
-            If Not UI_ATTACH_WINDOW($picked, WinGetTitle($picked), True) Then _GUICtrlStatusBar_SetText($SSTATUS, "Giả lập đã được một cửa sổ Auto khác sử dụng.", 0)
-        EndIf
-        Return
-    EndIf
-    If $HWND Or TimerDiff($bindingScanTime) < 1200 Then Return
-    GET_GAME_WINDOW()
-EndFunc
-
 Func GET_GAME_WINDOW($bForce = False)
-    If UI_BINDING_VALID() Then Return True
-    If $HWND Then UI_BIND_LOST()
-    $bindingScanTime = TimerInit()
-    Local $wanted = ($boundTitle <> "" ? $boundTitle : $SWANTWIN)
-    Local $windows = WinList(), $processes = ProcessList()
-    If Not IsArray($windows) Or Not IsArray($processes) Then Return False
-    For $pass = 1 To 2
-        For $i = 1 To $windows[0][0]
-            Local $title = $windows[$i][0], $hW = $windows[$i][1]
-            If $wanted <> "" And $wanted <> $title Then ContinueLoop
-            If Not IS_EMULATOR_WINDOW($hW, $title, $processes) Then ContinueLoop
-            If $wanted = "" And $pass = 1 And Not VD_SAMEDESKTOP($MAINFORM, $hW) Then ContinueLoop
-            If UI_ATTACH_WINDOW($hW, $title, $resumeOnBind And Not $bForce) Then Return True
-        Next
-        If $wanted <> "" Then ExitLoop
-    Next
-    Return False
+	; already have a live window? keep it
+	If Not $bForce And $HWND <> "" And $HWND <> 0 And WinExists($HWND) Then Return True
+
+	; Nhieu desktop ao (Windows): luot 1 chi lay MEmu CUNG desktop voi cua so Auto;
+	; luot 2 (het MEmu trong o desktop nay) lay MEmu desktop khac roi chuyen Auto sang desktop do.
+	Local $aList = WinList()
+	For $iPass = 1 To 2
+		For $i = 1 To $aList[0][0]
+			Local $sT = $aList[$i][0]
+			Local $hW = $aList[$i][1]
+			If $sT = "" Then ContinueLoop
+			Local $sCls = ""
+			Local $aCls = DllCall("user32.dll", "int", "GetClassNameW", "hwnd", $hW, "wstr", "", "int", 256)
+			If IsArray($aCls) Then $sCls = $aCls[2]
+
+			If Not IS_EMULATOR_WINDOW($hW, $sT, $sCls) Then ContinueLoop
+			If IS_CLAIMED_BY_OTHER($hW) Then ContinueLoop
+			; chay voi tham so /win=(1) -> chi gan dung cua so MEmu co ten do (khong phan biet desktop ao)
+			If $SWANTWIN <> "" Then
+				If $sT <> $SWANTWIN Then ContinueLoop
+			ElseIf $iPass = 1 And Not VD_SAMEDESKTOP($MAINFORM, $hW) Then
+				ContinueLoop
+			EndIf
+
+			$HWND = $hW
+			$STEXT = $sT
+			$APOS = WinGetPos($HWND)
+			CLAIM_WINDOW($HWND)
+			If $iPass = 2 Then VD_MOVETOWINDOW($MAINFORM, $HWND)    ; Auto theo MEmu sang desktop cua no
+			WinSetTitle($MAINFORM, "", "CTDT Auto - " & $sT)
+			_GUICtrlStatusBar_SetText($SSTATUS, "Window Assigned: " & $sT, 0, 0)
+			_GUICtrlStatusBar_SetText($SSTATUS, @TAB & @TAB & "Ready ", 1, 0)
+			DOCK_TO_GAME()
+			AUTO_START_IF_IDLE()
+			Return True
+		Next
+	Next
+	Return False
 EndFunc
 
 ; ---------------------------------------------------------------------------
@@ -25244,157 +25118,42 @@ Func SET_CLIENT_SIZE($hWin, $iW, $iH)
 	WinMove($hWin, "", $aW[0], $aW[1], $iW + $dx, $iH + $dy)
 EndFunc
 
-Func UI_BLOCK($x, $y, $w, $h, $color)
-    Local $id = GUICtrlCreateLabel("", $x, $y, $w, $h)
-    GUICtrlSetBkColor($id, $color)
-    GUICtrlSetState($id, $GUI_DISABLE)
-    Return $id
-EndFunc
-
-Func UI_HEADER($title, $subtitle, $w, $textWidth = Default)
-    If $textWidth = Default Then $textWidth = $w - 44
-    UI_BLOCK(0, 0, $w, 68, $UI_NAVY)
-    UI_BLOCK(0, 0, 5, 68, 0x38C9B2)
-    Local $id = GUICtrlCreateLabel($title, 22, 6, $textWidth, 35, BitOR($SS_NOPREFIX, $SS_CENTERIMAGE))
-    GUICtrlSetFont($id, 17, 600, 0, "Segoe UI")
-    GUICtrlSetColor($id, 0xFFFFFF)
-    GUICtrlSetBkColor($id, $UI_NAVY)
-    $id = GUICtrlCreateLabel($subtitle, 23, 42, $textWidth, 21, $SS_NOPREFIX)
-    GUICtrlSetColor($id, 0xBFD9DA)
-    GUICtrlSetBkColor($id, $UI_NAVY)
-    Return $id
-EndFunc
-
-Func UI_TITLE($text, $x, $y, $w, $background = $UI_BG)
-    Local $id = GUICtrlCreateLabel($text, $x, $y, $w, 24, $SS_NOPREFIX)
-    GUICtrlSetFont($id, 12, 600, 0, "Segoe UI")
-    GUICtrlSetColor($id, $UI_INK)
-    GUICtrlSetBkColor($id, $background)
-    Return $id
-EndFunc
-
-Func UI_CAPTION($text, $x, $y, $w)
-    Local $id = GUICtrlCreateLabel($text, $x, $y, $w, 20, $SS_NOPREFIX)
-    GUICtrlSetFont($id, 9, 600, 0, "Segoe UI")
-    GUICtrlSetColor($id, $UI_MUTED)
-    Return $id
-EndFunc
-
-Func UI_BUTTON($text, $x, $y, $w, $h, $callback, $primary = False)
-    Local $id = GUICtrlCreateButton($text, $x, $y, $w, $h)
-    GUICtrlSetFont($id, 9, 600, 0, "Segoe UI")
-    GUICtrlSetColor($id, ($primary ? 0xFFFFFF : $UI_INK))
-    GUICtrlSetBkColor($id, ($primary ? $UI_TEAL : $UI_BUTTON_BG))
-    If $callback <> "" Then GUICtrlSetOnEvent($id, $callback)
-    Return $id
-EndFunc
-
-Func UI_HEADER_LINK($text, $x, $w, $callback)
-    Local $id = UI_BUTTON($text, $x, 18, $w, 32, $callback)
-    GUICtrlSetColor($id, 0xFFFFFF)
-    GUICtrlSetBkColor($id, 0x284B58)
-    Return $id
-EndFunc
-
-Func UI_CHECK($text, $x, $y, $w, $callback = "", $checked = False)
-    Local $id = GUICtrlCreateCheckbox($text, $x, $y, $w, 22)
-    If $checked Then GUICtrlSetState($id, $GUI_CHECKED)
-    If $callback <> "" Then GUICtrlSetOnEvent($id, $callback)
-    Return $id
-EndFunc
-
-Func UI_RADIO($text, $x, $y, $w, $callback, $checked = False)
-    Local $id = GUICtrlCreateRadio($text, $x, $y, $w, 22)
-    If $checked Then GUICtrlSetState($id, $GUI_CHECKED)
-    GUICtrlSetOnEvent($id, $callback)
-    Return $id
-EndFunc
-
-Func UI_TOOLBAR($compact)
-    If $compact Then
-        MOVE_CTRL($BSTART,       8, 7,  83, 32)
-        MOVE_CTRL($BASSIGN,     97, 7,  96, 32)
-        MOVE_CTRL($BRESIZE,    199, 7, 122, 32)
-        MOVE_CTRL($BCUSTOMBTN, 327, 7, 114, 32)
-        MOVE_CTRL($BTOGGLE,    447, 7,  98, 32)
-        MOVE_CTRL($BEXIT,      551, 7,  75, 32)
-    Else
-        MOVE_CTRL($BSTART,      18, 433, 134, 36)
-        MOVE_CTRL($BASSIGN,    162, 433, 108, 36)
-        MOVE_CTRL($BRESIZE,    278, 433, 129, 36)
-        MOVE_CTRL($BCUSTOMBTN, 415, 433, 128, 36)
-        MOVE_CTRL($BTOGGLE,    644, 433,  95, 36)
-        MOVE_CTRL($BEXIT,      747, 433,  75, 36)
-    EndIf
-EndFunc
-
-Func UI_RUN_BUTTON($running)
-    GUICtrlSetData($BSTART, ($running ? "Dừng" : "Bắt đầu"))
-    GUICtrlSetBkColor($BSTART, ($running ? 0xA7363C : $UI_TEAL))
-    GUICtrlSetColor($BSTART, 0xFFFFFF)
-EndFunc
-
-Func UI_LIST_WIDTH($id, $items)
-    Local $hList = GUICtrlGetHandle($id)
-    Local $dc = _WinAPI_GetDC($hList)
-    If Not $dc Then Return
-    Local $oldFont = _WinAPI_SelectObject($dc, _SendMessage($hList, $WM_GETFONT))
-    Local $rows = StringSplit($items, "|", 2), $width = 0
-    For $row In $rows
-        If $row = "" Then ContinueLoop
-        Local $size = _WinAPI_GetTextExtentPoint32($dc, $row)
-        If IsDllStruct($size) Then
-            Local $pixels = DllStructGetData($size, 1) + 6
-            If $pixels > $width Then $width = $pixels
-        EndIf
-    Next
-    If $oldFont Then _WinAPI_SelectObject($dc, $oldFont)
-    _WinAPI_ReleaseDC($hList, $dc)
-    GUICtrlSendMsg($id, 0x194, $width, 0) ; LB_SETHORIZONTALEXTENT
-EndFunc
-
-Func UI_MODE_CAPTION()
-    Local $name = GUICtrlRead($LAMMODE)
-    GUICtrlSetData($uiModeCaption, ($name = "" ? "Chưa chọn chế độ" : "Chế độ đã chọn  ·  " & $name))
-EndFunc
-
-Func UI_STATUS_LAYOUT()
-    If $BCOLLAPSED And $HWND Then
-        Local $partsMini[3] = [$UI_COMPACT_W - 294, $UI_COMPACT_W - 146, -1]
-        _GUICtrlStatusBar_SetParts($SSTATUS, $partsMini)
-        _GUICtrlStatusBar_SetText($SSTATUS, $STEXT, 2)
-        _GUICtrlStatusBar_SetTipText($SSTATUS, 2, $STEXT)
-    Else
-        Local $width = ($BCOLLAPSED ? $UI_COMPACT_W : $UI_MAIN_W)
-        Local $parts[2] = [$width - 165, -1]
-        _GUICtrlStatusBar_SetParts($SSTATUS, $parts)
-    EndIf
-EndFunc
-
 Func SET_COLLAPSED($bOn)
-    If $uiChangingLayout Or $BCOLLAPSED = $bOn Then Return
-    $uiChangingLayout = True
-    $BCOLLAPSED = $bOn
-    Local $w = ($bOn ? $UI_COMPACT_W : $UI_MAIN_W)
-    Local $h = ($bOn ? $UI_COMPACT_H : $UI_MAIN_H)
-    ; Freeze painting until the toolbar and expanded settings are in position.
-    _SendMessage($MAINFORM, $WM_SETREDRAW, False)
-    ; Preserve visibility and other live style bits, replacing only the window frame.
-    Local $style = _WinAPI_GetWindowLong($MAINFORM, $GWL_STYLE)
-    Local $frame = ($bOn ? $WS_POPUP : $uiExpandedFrame)
-    _WinAPI_SetWindowLong($MAINFORM, $GWL_STYLE, BitOR(BitAND($style, BitNOT($uiFrameMask)), $frame))
-    _WinAPI_SetWindowPos($MAINFORM, 0, 0, 0, 0, 0, BitOR($SWP_FRAMECHANGED, $SWP_NOMOVE, $SWP_NOSIZE, $SWP_NOACTIVATE, $SWP_NOZORDER))
-    SET_CLIENT_SIZE($MAINFORM, $w, $h)
-    For $id = $uiFirstSetting To $uiLastSetting
-        GUICtrlSetState($id, ($bOn ? $GUI_HIDE : $GUI_SHOW))
-    Next
-    UI_TOOLBAR($bOn)
-    GUICtrlSetData($BTOGGLE, ($bOn ? "Mở rộng" : "Thu gọn"))
-    UI_STATUS_LAYOUT()
-    _SendMessage($MAINFORM, $WM_SETREDRAW, True)
-    _WinAPI_RedrawWindow($MAINFORM, 0, 0, BitOR($RDW_INVALIDATE, $RDW_ERASE, $RDW_ALLCHILDREN))
-    DOCK_TO_GAME()
-    $uiChangingLayout = False
+	$BCOLLAPSED = $bOn
+
+	If $bOn Then
+		SET_CLIENT_SIZE($MAINFORM, 492, 62)
+		; --- THU GON: an het cau hinh, don 6 nut ve mot hang ---
+		For $i = 0 To UBound($ACFGCTRLS) - 1
+			GUICtrlSetState($ACFGCTRLS[$i], $GUI_HIDE)
+		Next
+		MOVE_CTRL($BSTART,       6, 6,  74, 26)
+		MOVE_CTRL($BCUSTOMBTN,  84, 6,  92, 26)
+		MOVE_CTRL($BASSIGN,    180, 6, 100, 26)
+		MOVE_CTRL($BRESIZE,    284, 6,  62, 26)
+		MOVE_CTRL($BTOGGLE,    350, 6,  74, 26)
+		MOVE_CTRL($BEXIT,      428, 6,  56, 26)
+		GUICtrlSetData($BTOGGLE, "Expand")
+	Else
+		SET_CLIENT_SIZE($MAINFORM, 583, 296)
+		; --- MO RONG: tra lai bo cuc goc ---
+		For $i = 0 To UBound($ACFGCTRLS) - 1
+			GUICtrlSetState($ACFGCTRLS[$i], $GUI_SHOW)
+		Next
+		MOVE_CTRL($BASSIGN,    312, 112, 113, 25)
+		MOVE_CTRL($BSTART,     312, 144, 113, 25)
+		MOVE_CTRL($BRESIZE,    312, 176, 113, 25)
+		MOVE_CTRL($BEXIT,      312, 208, 113, 25)
+		MOVE_CTRL($BCUSTOMBTN, 312, 240, 113, 25)
+		MOVE_CTRL($BTOGGLE,    432, 240, 113, 25)
+		GUICtrlSetData($BTOGGLE, "Collapse")
+	EndIf
+
+	; ve lai thanh trang thai cho khop chieu rong moi
+	Local $aParts[2] = [($bOn ? 400 : 470), -1]
+	_GUICtrlStatusBar_SetParts($SSTATUS, $aParts)
+	_GUICtrlStatusBar_Resize($SSTATUS)
+	DOCK_TO_GAME()
 EndFunc
 
 
