@@ -18626,7 +18626,7 @@ OnAutoItExitRegister ( "bExitClick" )
 Global Const $UI_BG = 0xFFFFFF, $UI_INK = 0x192D3A, $UI_MUTED = 0x4C6470
 Global Const $UI_NAVY = 0x173341, $UI_TEAL = 0x006C62, $UI_RAIL = 0xF1F6F6
 Global Const $UI_LINE = 0xD6E2E4, $UI_BUTTON_BG = 0xE8F0F1
-Global Const $UI_MAIN_W = 650, $UI_MAIN_H = 348, $UI_COMPACT_W = 540, $UI_COMPACT_H = 44
+Global Const $UI_MAIN_W = 650, $UI_MAIN_H = 348, $UI_COMPACT_W = 650, $UI_COMPACT_H = 64
 Global Const $UPDATE_VERSION = "2026.11.22.3"
 Global Const $GITHUB_VERSION_URL = "https://raw.githubusercontent.com/taivadlc25/CtdtAuto/main/version.json"
 Global Const $GITHUB_REPO_URL = "https://github.com/taivadlc25/CtdtAuto"
@@ -18728,7 +18728,7 @@ Global $BCUSTOMBTN = UI_BUTTON("Click tùy chỉnh", 0, 0, 1, 1, "BCUSTOMCLICKOP
 Global $BTOGGLE = UI_BUTTON("Thu gọn", 0, 0, 1, 1, "BTOGGLECLICK")
 Global $BEXIT = UI_BUTTON("Thoát", 0, 0, 1, 1, "bExitClick")
 UI_TOOLBAR(False)
-Opt("GUIResizeMode", $oldResizeMode)
+Opt("GUIResizeMode", $GUI_DOCKALL)
 
 $SSTATUS = _GUICtrlStatusBar_Create($MAINFORM)
 _GUICtrlStatusBar_SetMinHeight($SSTATUS, 24)
@@ -25316,19 +25316,19 @@ EndFunc
 
 Func UI_TOOLBAR($compact)
     If $compact Then
-        MOVE_CTRL($BSTART,       8, 6,  80, 30)
-        MOVE_CTRL($BASSIGN,     92, 6,  88, 30)
-        MOVE_CTRL($BRESIZE,    184, 6, 110, 30)
-        MOVE_CTRL($BCUSTOMBTN, 298, 6, 105, 30)
-        MOVE_CTRL($BTOGGLE,    408, 6,  70, 30)
-        MOVE_CTRL($BEXIT,      482, 6,  50, 30)
+        MOVE_CTRL($BSTART,       8, 6,  92, 28)
+        MOVE_CTRL($BASSIGN,    106, 6,  92, 28)
+        MOVE_CTRL($BRESIZE,    204, 6, 118, 28)
+        MOVE_CTRL($BCUSTOMBTN, 328, 6, 114, 28)
+        MOVE_CTRL($BTOGGLE,    448, 6,  96, 28)
+        MOVE_CTRL($BEXIT,      550, 6,  90, 28)
     Else
-        MOVE_CTRL($BSTART,      10, 284, 100, 30)
-        MOVE_CTRL($BASSIGN,    116, 284,  90, 30)
-        MOVE_CTRL($BRESIZE,    212, 284, 115, 30)
-        MOVE_CTRL($BCUSTOMBTN, 333, 284, 110, 30)
-        MOVE_CTRL($BTOGGLE,    465, 284,  85, 30)
-        MOVE_CTRL($BEXIT,      556, 284,  84, 30)
+        MOVE_CTRL($BSTART,       8, 284,  92, 30)
+        MOVE_CTRL($BASSIGN,    106, 284,  92, 30)
+        MOVE_CTRL($BRESIZE,    204, 284, 118, 30)
+        MOVE_CTRL($BCUSTOMBTN, 328, 284, 114, 30)
+        MOVE_CTRL($BTOGGLE,    448, 284,  96, 30)
+        MOVE_CTRL($BEXIT,      550, 284,  90, 30)
     EndIf
 EndFunc
 
@@ -25364,7 +25364,7 @@ EndFunc
 
 Func UI_STATUS_LAYOUT()
     If $BCOLLAPSED And $HWND Then
-        Local $partsMini[3] = [$UI_COMPACT_W - 240, $UI_COMPACT_W - 120, -1]
+        Local $partsMini[3] = [$UI_COMPACT_W - 280, $UI_COMPACT_W - 140, -1]
         _GUICtrlStatusBar_SetParts($SSTATUS, $partsMini)
         _GUICtrlStatusBar_SetText($SSTATUS, $STEXT, 2)
         _GUICtrlStatusBar_SetTipText($SSTATUS, 2, $STEXT)
@@ -25373,6 +25373,7 @@ Func UI_STATUS_LAYOUT()
         Local $parts[2] = [$width - 140, -1]
         _GUICtrlStatusBar_SetParts($SSTATUS, $parts)
     EndIf
+    _GUICtrlStatusBar_Resize($SSTATUS)
 EndFunc
 
 Func SET_COLLAPSED($bOn)
