@@ -82,7 +82,7 @@ try {
     & (Join-Path $autoit 'Au3Check.exe') $stagedSource
     if ($LASTEXITCODE) { throw 'AutoIt syntax check failed.' }
     $exe = Join-Path $stage $releaseName
-    $argsText = '/in "' + $stagedSource + '" /out "' + $exe + '" /icon "' + $icon + '" /x64 /comp 1 /console'
+    $argsText = '/in "' + $stagedSource + '" /out "' + $exe + '" /icon "' + $icon + '" /x64 /comp 1 /gui'
     $compiler = Start-Process -FilePath (Join-Path $autoit 'Aut2Exe\Aut2exe_x64.exe') -ArgumentList $argsText -WorkingDirectory $stage -Wait -PassThru -NoNewWindow
     if ($compiler.ExitCode -or ![IO.File]::Exists($exe)) { throw 'CTDT Auto compilation failed.' }
     if ([Diagnostics.FileVersionInfo]::GetVersionInfo($exe).FileVersion -ne $Version) { throw 'Compiled EXE version mismatch.' }
