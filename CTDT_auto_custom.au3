@@ -4,8 +4,8 @@
 #AutoIt3Wrapper_Compile_Both=y
 #AutoIt3Wrapper_UseX64=y
 #pragma compile(Icon, CtdtAuto.ico)
-#pragma compile(FileVersion, 2026.11.22.3)
-#pragma compile(ProductVersion, 2026.11.22.3)
+#pragma compile(FileVersion, 2026.11.22.4)
+#pragma compile(ProductVersion, 2026.11.22.4)
 #EndRegion
 Global Const $BS_GROUPBOX = 7
 Global Const $BS_BOTTOM = 2048
@@ -18627,13 +18627,18 @@ Global Const $UI_BG = 0xFFFFFF, $UI_INK = 0x192D3A, $UI_MUTED = 0x4C6470
 Global Const $UI_NAVY = 0x173341, $UI_TEAL = 0x006C62, $UI_RAIL = 0xF1F6F6
 Global Const $UI_LINE = 0xD6E2E4, $UI_BUTTON_BG = 0xE8F0F1
 Global Const $UI_MAIN_W = 650, $UI_MAIN_H = 348, $UI_COMPACT_W = 650, $UI_COMPACT_H = 64
-Global Const $UPDATE_VERSION = "2026.11.22.3"
+Global Const $UPDATE_VERSION = "2026.11.22.4"
 Global Const $GITHUB_VERSION_URL = "https://raw.githubusercontent.com/taivadlc25/CtdtAuto/main/version.json"
 Global Const $GITHUB_REPO_URL = "https://github.com/taivadlc25/CtdtAuto"
 Global $updateForm = 0, $updateStatusLabel = 0, $updateRendered = "", $updateError = "", $updateManualStart = 0
 Global $SAMINI = @ScriptDir & "\auto_modes.ini", $AMMAINIDS[1] = [0], $AMCURMODE = 0, $HAMFORM = 0
 
 $MAINFORM = GUICreate("CTDT Auto", $UI_MAIN_W, $UI_MAIN_H)
+If @Compiled Then
+    GUISetIcon(@AutoItExe, -1, $MAINFORM)
+ElseIf FileExists(@ScriptDir & "\CtdtAuto.ico") Then
+    GUISetIcon(@ScriptDir & "\CtdtAuto.ico", -1, $MAINFORM)
+EndIf
 GUISetFont(9, 400, 0, "Segoe UI")
 GUISetBkColor($UI_BG)
 GUISetOnEvent($GUI_EVENT_CLOSE, "MainFormClose")
@@ -25255,14 +25260,18 @@ Func UI_BLOCK($x, $y, $w, $h, $color)
 EndFunc
 
 Func UI_HEADER($title, $subtitle, $w, $textWidth = Default)
-    If $textWidth = Default Then $textWidth = $w - 44
+    If $textWidth = Default Then $textWidth = $w - 60
     UI_BLOCK(0, 0, $w, 38, $UI_NAVY)
     UI_BLOCK(0, 0, 4, 38, 0x38C9B2)
-    Local $id = GUICtrlCreateLabel($title, 14, 2, $textWidth, 20, BitOR($SS_NOPREFIX, $SS_CENTERIMAGE))
+    Local $sIconFile = (@Compiled ? @AutoItExe : @ScriptDir & "\CtdtAuto.ico")
+    If FileExists($sIconFile) Then
+        GUICtrlCreateIcon($sIconFile, -1, 10, 5, 28, 28)
+    EndIf
+    Local $id = GUICtrlCreateLabel($title, 44, 2, $textWidth, 20, BitOR($SS_NOPREFIX, $SS_CENTERIMAGE))
     GUICtrlSetFont($id, 11, 600, 0, "Segoe UI")
     GUICtrlSetColor($id, 0xFFFFFF)
     GUICtrlSetBkColor($id, $UI_NAVY)
-    $id = GUICtrlCreateLabel($subtitle, 14, 20, $textWidth, 16, $SS_NOPREFIX)
+    $id = GUICtrlCreateLabel($subtitle, 44, 20, $textWidth, 16, $SS_NOPREFIX)
     GUICtrlSetFont($id, 8.5, 400, 0, "Segoe UI")
     GUICtrlSetColor($id, 0xBFD9DA)
     GUICtrlSetBkColor($id, $UI_NAVY)

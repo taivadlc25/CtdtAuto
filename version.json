@@ -1,6 +1,6 @@
-{
-  "version": "2026.11.22.3",
-  "download_url": "https://github.com/taivadlc25/CtdtAuto/releases/download/v2026.11.22.3/CtdtAuto.exe",
-  "changelog": "Phát hành bản CtdtAuto với Game Icon mới và tự động cập nhật qua GitHub.",
-  "required": false
+﻿{
+    "version":  "2026.11.22.4",
+    "download_url":  "https://github.com/taivadlc25/CtdtAuto/releases/download/v2026.11.22.4/CtdtAuto.exe",
+    "changelog":  "Cap nhat Game Logo 3D moi va nhung Icon chuan Windows cho CtdtAuto",
+    "required":  false
 }
